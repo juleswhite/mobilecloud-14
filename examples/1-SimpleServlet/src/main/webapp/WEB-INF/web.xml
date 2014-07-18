@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+
+<!-- 
+  The web.xml file provides basic information to the web container on 
+  how to load your servlets into the container and which requests should
+  be routed to each servlet.
+ -->
+<web-app xmlns="http://java.sun.com/xml/ns/j2ee"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee http://java.sun.com/xml/ns/j2ee/web-app_2_4.xsd"
+    version="2.4">
+
+    <display-name>Echo Application</display-name>
+    <description>
+        This is an application that will echo any message received via
+        the msg parameter back to the client.
+    </description>
+
+    <!-- This set of directives tells the web application container about
+         our servlet class so that it is loaded by the container -->
+    <servlet>
+        <servlet-name>EchoServlet</servlet-name>
+        <servlet-class>org.magnum.mobilecloud.servlet.EchoServlet</servlet-class>
+    </servlet>
+
+    <!-- this set of directives tells the web application container which
+         requests should be routed to our servlet. In this case, any request
+         to the path '/echo' will be routed to the servlet. You can use wildcards
+         for path matching. For example, '/echo/**' would match any sub path of
+         '/echo/', such as '/echo/foo' and '/echo/bar' -->
+    <servlet-mapping>
+        <servlet-name>EchoServlet</servlet-name>
+        <url-pattern>/echo</url-pattern>
+        <!-- http://localhost:8080/echo -->
+    </servlet-mapping>
+
+</web-app>    

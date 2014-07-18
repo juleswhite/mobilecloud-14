@@ -1,0 +1,9 @@
+.recommenders
+.metadata
+.gradle
+bin
+.DS_Store
+build
+.project
+.settings
+.classpath
