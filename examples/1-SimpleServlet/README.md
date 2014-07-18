@@ -29,6 +29,8 @@ to echo to the EchoServlet.
    so that the client will know how to interpret the data in the body of
    the response. If you change this content-type, it will affect how your
    browser displays the result.
+4. Look at the EchoServletHttpTest for an example of how to programmatically
+   send an HTTP GET request to the servlet.
 
 ## Security Considerations
 
