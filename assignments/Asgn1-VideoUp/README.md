@@ -11,6 +11,21 @@ after the final version is released.
 Please post any bugs or ambiguities that you find in the Assignment 1 forum
 [https://class.coursera.org/mobilecloud-001/forum/list?forum_id=10010].
 
+## Running the Application
+
+__You do not use "jettyRun" to launch this application. Please read these instructions__
+
+To run the application:
+
+Right-click on the Application class in the org.magnum.mobilecloud.video
+package, Run As->Java Application
+
+To stop the application:
+
+Open the Eclipse Debug Perspective (Window->Open Perspective->Debug), right-click on
+the application in the "Debug" view (if it isn't open, Window->Show View->Debug) and
+select Terminate
+
 ## Overview
 
 A popular use of cloud services is to manage media that is uploaded
@@ -62,7 +77,9 @@ POST /video
      was stored along with any updates to that object made by the server. 
    - **_The server should generate a unique identifier for the Video
      object and assign it to the Video by calling its setId(...)
-     method._** The returned Video JSON should include this server-generated
+     method._** 
+   - No video should have ID = 0. All IDs should be > 0.
+   - The returned Video JSON should include this server-generated
      identifier so that the client can refer to it when uploading the
      binary mpeg video content for the Video.
    - The server should also generate a "data url" for the
@@ -119,6 +136,38 @@ GET /video/{id}/data
  
  You should not modify any of the code in Video, VideoStatus, VideoSvcApi, AutoGrading,
  or AutoGradingTest. 
+
+## Testing Your Implementation
+
+To test your solution, first run the application as described above. Once your application
+is running, you can right-click on the AutoGradingTest->Run As->JUnit Test to launch the
+test. Eclipse will report which tests pass or fail.
+
+To get an estimated score for your solution, right-click on AutoGrading (not AutoGradingTest) and
+Run As->Java Application. The AutoGrading application will run AutoGradingTest and then print a
+summary of the test results and your score to the Eclipse Console (Window->Show View->Console). 
+The AutoGrading application will also zip all of your source code into a submission package that
+you can submit to Coursera to receive your official grade. Note: each time that you run AutoGrading
+it will create a separate zip file. Make sure that you choose the right zip file when submitting 
+your assignment! All of the submission zip files are placed in the coursera-submission folder.
+
+## Submitting Your Assignment
+
+To submit your assignment, you must first run the AutoGrading application as described in the previous
+step to create your submission zip file. Make sure that you take note of the name of the submission
+package that is printed in the console to ensure that you submit the correct zip file. You should
+submit the submission package that is generated in the coursera-submission folder as the 
+"Output Submission". Leave the "Additional Submission" empty. 
+
+After submitting  your solution to Coursera, your submission package will be sent to the auto-grading
+servers. It may take a few minutes for a score to be assigned to your submission. Once the submission
+is graded, a detailed score will be registered with Coursera.
+
+Note: locally running the AutoGrading application DOES NOT submit your solution to Coursera and will
+not be counted as a valid submission. The grade that you see when running the AutoGrading application
+is an estimate of your grade only. You must correctly submit the solution to Coursera to receive an
+official grade.
+
  
 ## Provided Code
 
@@ -197,17 +246,7 @@ GET /video/{id}/data
 		   return base;
 		}
 ```
-- One way to generate a unique ID for each video is to store them in a list and assign
-  them an ID based on their index in the list, similar to this:
-```java
-    private List<Video> videos = ...
-
-  	public synchronized int addAndGetId(Video v) {
-		videos.add(v);
-		return videos.size() - 1;
-	}
-```
-- Another approach might be to use an AtomicLong similar to this:
+- One way to generate a unique ID for each video is to use an AtomicLong similar to this:
 ```java
     private static final AtomicLong currentId = new AtomicLong(0L);
 	
@@ -225,50 +264,6 @@ GET /video/{id}/data
 		}
 	}
 ```
-
-## Running the Application
-
-To run the application:
-
-Right-click on the Application class in the org.magnum.mobilecloud.video
-package, Run As->Java Application
-
-To stop the application:
-
-Open the Eclipse Debug Perspective (Window->Open Perspective->Debug), right-click on
-the application in the "Debug" view (if it isn't open, Window->Show View->Debug) and
-select Terminate
-
-## Testing Your Implementation
-
-To test your solution, first run the application as described above. Once your application
-is running, you can right-click on the AutoGradingTest->Run As->JUnit Test to launch the
-test. Eclipse will report which tests pass or fail.
-
-To get an estimated score for your solution, right-click on AutoGrading (not AutoGradingTest) and
-Run As->Java Application. The AutoGrading application will run AutoGradingTest and then print a
-summary of the test results and your score to the Eclipse Console (Window->Show View->Console). 
-The AutoGrading application will also zip all of your source code into a submission package that
-you can submit to Coursera to receive your official grade. Note: each time that you run AutoGrading
-it will create a separate zip file. Make sure that you choose the right zip file when submitting 
-your assignment! All of the submission zip files are placed in the coursera-submission folder.
-
-## Submitting Your Assignment
-
-To submit your assignment, you must first run the AutoGrading application as described in the previous
-step to create your submission zip file. Make sure that you take note of the name of the submission
-package that is printed in the console to ensure that you submit the correct zip file. You should
-submit the submission package that is generated in the coursera-submission folder as the 
-"Output Submission". Leave the "Additional Submission" empty. 
-
-After submitting  your solution to Coursera, your submission package will be sent to the auto-grading
-servers. It may take a few minutes for a score to be assigned to your submission. Once the submission
-is graded, a detailed score will be registered with Coursera.
-
-Note: locally running the AutoGrading application DOES NOT submit your solution to Coursera and will
-not be counted as a valid submission. The grade that you see when running the AutoGrading application
-is an estimate of your grade only. You must correctly submit the solution to Coursera to receive an
-official grade.
 
 
 
