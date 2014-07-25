@@ -32,7 +32,7 @@ public class HtmlVideoServlet extends HttpServlet // Servlets should inherit Htt
 	public static final String VIDEO_ADDED = "Video added.";
     // An in-memory list that the servlet uses to store the
     // videos that are sent to it by clients
-    private List<Video> videos = new ArrayList<Video>();
+    private List<Video> videos = new java.util.concurrent.CopyOnWriteArrayList<Video>();
     
     protected void processRequest(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
@@ -48,7 +48,7 @@ public class HtmlVideoServlet extends HttpServlet // Servlets should inherit Htt
         
         // UI form
         sendToClient.write(
-            "<form name='formvideo' action='video' method='POST' target='_self'>" +
+            "<form name='formvideo' method='POST' target='_self'>" +
             "<fieldset><legend>Video Data</legend>" +
             "<table><tr>" +
             "<td><label for='name'>Name:&nbsp;</label></td>" +
