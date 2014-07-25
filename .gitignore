@@ -7,3 +7,5 @@ build
 .project
 .settings
 .classpath
+.private
+coursera-submission
