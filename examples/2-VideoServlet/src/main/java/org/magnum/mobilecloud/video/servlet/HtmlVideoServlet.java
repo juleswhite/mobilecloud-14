@@ -84,7 +84,7 @@ public class HtmlVideoServlet extends HttpServlet // Servlets should inherit Htt
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
-
+    	resp.getWriter().write("<html><body>");
         processRequest(req, resp);
     }
 
@@ -143,7 +143,7 @@ public class HtmlVideoServlet extends HttpServlet // Servlets should inherit Htt
             
             // Let the client know that we successfully added the video
             // by writing a message into the HTTP response body
-            resp.getWriter().write(VIDEO_ADDED);
+            resp.getWriter().write("<html><body>" + VIDEO_ADDED);
             
             processRequest(req, resp);
         }
