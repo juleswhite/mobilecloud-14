@@ -2,7 +2,6 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-<meta content="text/html;charset=utf-8" http-equiv="Content-Type">
 <title>Sample Video Client</title>
 <style> 
 button { width: 150px;}
@@ -69,8 +68,8 @@ function ViewModel() {
 	var self = this;
 	
 	self.videos = ko.mapping.fromJS([]);
-	self.uploadUrl = ko.observable(null);
-	
+	self.selectedVideo = ko.observable(null);
+	self.uploadFile = ko.observable(null);
 	
 	self.addVideo = function() {
 		self.videos.push(ko.mapping.fromJS(new Video()))
@@ -109,7 +108,7 @@ function ViewModel() {
 		var formData = new FormData($('#uploadForm')[0]);
 		
 		$.ajax({
-			url: self.uploadUrl(),  //Server script to process data
+			url: self.selectedVideo().dataUrl(),  //Server script to process data
 			type: 'POST',
 			success: self.hideUploadForm,
 			error: function() {alert("Upload of video failed");},
@@ -123,13 +122,24 @@ function ViewModel() {
 	}
 	
 	self.showUploadForm = function(video) {
-		self.uploadUrl(video.dataUrl());
+		self.selectedVideo(video);
 	}
 	
 	self.hideUploadForm = function() {
-		self.uploadUrl(null);
+		self.selectedVideo(null);
+		self.uploadFile(null);
+		return false;
 	}
-
+	
+	self.selectedVideoFormattedName = function() {
+		var sv = self.selectedVideo();
+		return sv == null ? null : sv.title() + " (id: " + sv.id() + ")";
+	}
+	
+	self.openWindow = function(video) {
+		var w = window.open(video().dataUrl(), "video" + video.id());
+	}
+	
 	self.refreshVideos();
 }
 
@@ -154,7 +164,7 @@ ko.applyBindings(new ViewModel());
 		<td><input data-bind="value: subject"/></td>
 		<td><input data-bind="value: location"/></td>
 		<td><input data-bind="value: contentType"/></td>
-		<td data-bind="visible: id() != null"><a target="_blank" data-bind="attr: { href: dataUrl, title: dataUrl }">Video</a></td>
+		<td data-bind="visible: id() != null"><a target="_blank" data-bind="attr: { href: dataUrl, title: dataUrl}">View Video</a></td>
 		<td data-bind="visible: id() != null"><button data-bind="click: $root.showUploadForm">Upload video</button> </td>
     </tr>    
 	</tbody>
@@ -164,13 +174,19 @@ ko.applyBindings(new ViewModel());
 <button data-bind="click: updateAll">Update all videos</button>
 <button data-bind="click: addVideo">Add a video</button> 
 </div>
-<div id="overlay" class="overlay" data-bind="visible: uploadUrl() != null"></div>
-<div id="modal" class="modal" data-bind="visible: uploadUrl() != null">
-	<h3>Select a file to upload</h3>
-	<form id="uploadForm" class="uploadForm" enctype="multipart/form-data">
-		<input name="data" type="file" /><br/>
-		<button data-bind="click: uploadVideo">Upload</button><button data-bind="click: hideUploadForm">Cancel</button> 
+<div id="overlay" class="overlay" data-bind="visible: selectedVideo() != null"></div>
+<div id="modal" class="modal" data-bind="visible: selectedVideo() != null">
+	<h3>Select a file to upload for 
+		<span data-bind="text: selectedVideoFormattedName()"></span>
+	</h3>
+	
+	<form id="uploadForm" class="uploadForm" enctype="multipart/form-data" onsubmit="return false;">
+		<input name="data" type="file" data-bind="value: uploadFile"/><br/>
 	</form>
+	<button data-bind="click: uploadVideo, enable: uploadFile() != null">Upload</button>
+	<button data-bind="click: hideUploadForm">Cancel</button>
+
+
 </div>
 </body>
 </html>
