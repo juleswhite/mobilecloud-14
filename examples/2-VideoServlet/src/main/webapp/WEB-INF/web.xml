@@ -10,10 +10,10 @@
     xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee http://java.sun.com/xml/ns/j2ee/web-app_2_4.xsd"
     version="2.4">
 
-    <display-name>Echo Application</display-name>
+    <display-name>Video Application</display-name>
     <description>
-        This is an application that will echo any message received via
-        the msg parameter back to the client.
+        This is an application that will extract parameters and validate them.
+        It allows clients to send the metadata for Videos.
     </description>
 
     <!-- This set of directives tells the web application container about
@@ -21,6 +21,11 @@
     <servlet>
         <servlet-name>VideoServlet</servlet-name>
         <servlet-class>org.magnum.mobilecloud.video.servlet.VideoServlet</servlet-class>
+    </servlet>
+    
+    <servlet>
+        <servlet-name>HtmlVideoServlet</servlet-name>
+        <servlet-class>org.magnum.mobilecloud.video.servlet.HtmlVideoServlet</servlet-class>
     </servlet>
 
     <!-- this set of directives tells the web application container which
@@ -33,4 +38,8 @@
         <url-pattern>/video</url-pattern>
     </servlet-mapping>
 
+	<servlet-mapping>
+        <servlet-name>HtmlVideoServlet</servlet-name>
+        <url-pattern>/view/video</url-pattern>
+    </servlet-mapping>
 </web-app>    

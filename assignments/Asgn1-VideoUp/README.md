@@ -17,7 +17,7 @@ __You do not use "jettyRun" to launch this application. Please read these instru
 
 To run the application:
 
-Right-click on the Application class in the org.magnum.mobilecloud.video
+Right-click on the Application class in the org.magnum.dataup
 package, Run As->Java Application
 
 To stop the application:
