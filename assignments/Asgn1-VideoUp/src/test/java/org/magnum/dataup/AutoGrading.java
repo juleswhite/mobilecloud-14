@@ -28,10 +28,9 @@ import org.junit.Test;
  * This class allows you to estimate the score for your solution before handing it in.
  * 
  * This class also generates the required submission package to hand your solution in.
-
- In order to run this AutoGrading application, in Eclipse,
- Right-click on it->Run As->JUnit Test
- * 
+ *
+ * In order to run this AutoGrading application, in Eclipse,
+ * Right-click on it->Run As->JUnit Test
  * 
  * Please read the instructions that the application prints very carefully. It will store the generated
  * solution submission packages in the coursera-submission folder within the project directory. After running
