@@ -144,7 +144,7 @@ is running, you can right-click on the AutoGradingTest->Run As->JUnit Test to la
 test. Eclipse will report which tests pass or fail.
 
 To get an estimated score for your solution, right-click on AutoGrading (not AutoGradingTest) and
-Run As->Java Application. The AutoGrading application will run AutoGradingTest and then print a
+Run As->JUnit Test. The AutoGrading application will run AutoGradingTest and then print a
 summary of the test results and your score to the Eclipse Console (Window->Show View->Console). 
 The AutoGrading application will also zip all of your source code into a submission package that
 you can submit to Coursera to receive your official grade. Note: each time that you run AutoGrading
