@@ -1,0 +1,176 @@
+<!DOCTYPE html PUBLIC"-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta content="text/html;charset=utf-8" http-equiv="Content-Type">
+<title>Sample Video Client</title>
+<style> 
+button { width: 150px;}
+h3 { font-family: Verdana, Geneva, sans-serif; margin-top:0px;}
+h1 { font-family: Verdana, Geneva, sans-serif; }
+#modal {
+	position:absolute;
+	top: 10%;
+	left:25%;
+	width: 50%;
+	background:white;
+	border-radius:10px;
+	padding:20px;
+}
+
+#overlay {
+	position: fixed; 
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	background: #000;
+	opacity: 0.5;
+	filter: alpha(opacity=50);
+}
+</style>
+<script type="text/javascript" src="http://ajax.aspnetcdn.com/ajax/jQuery/jquery-2.1.1.min.js"></script>
+<script type="text/javascript" src="http://ajax.aspnetcdn.com/ajax/knockout/knockout-3.0.0.js"></script>
+<script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/knockout.mapping/2.4.1/knockout.mapping.min.js"></script>
+<script <script type="text/javascript">
+$( document ).ready( function() {
+
+// copied from http://jsfiddle.net/mbest/n4z8Q/
+ko.bindingHandlers.numeric = {
+    init: function (element) {
+        $(element).on("keydown", function (event) {
+            // Allow: backspace, delete, tab, escape, and enter
+            if (event.keyCode == 46 || event.keyCode == 8 || event.keyCode == 9 || event.keyCode == 27 || event.keyCode == 13 ||
+                // Allow: Ctrl+A
+                (event.keyCode == 65 && event.ctrlKey === true) ||
+                // Allow: . ,
+                (event.keyCode == 188 || event.keyCode == 190 || event.keyCode == 110) ||
+                // Allow: home, end, left, right
+                (event.keyCode >= 35 && event.keyCode <= 39)) {
+                // let it happen, don't do anything
+                return;
+            }
+            else {
+                // Ensure that it is a number and stop the keypress
+                if (event.shiftKey || (event.keyCode < 48 || event.keyCode > 57) && (event.keyCode < 96 || event.keyCode > 105)) {
+                    event.preventDefault();
+                }
+            }
+        });
+    }    
+};
+
+
+// video constructor, only for added videos
+function Video() { return {id: null, title: null, duration: null, location: null, subject: null, contentType: "video/mp4", dataUrl: null};}
+
+// the client-side model
+function ViewModel() {
+	var self = this;
+	
+	self.videos = ko.mapping.fromJS([]);
+	self.uploadUrl = ko.observable(null);
+	
+	
+	self.addVideo = function() {
+		self.videos.push(ko.mapping.fromJS(new Video()))
+	}
+	
+	self.refreshVideos = function() {
+		$.getJSON("/video", function(data) {
+			ko.mapping.fromJS(data, self.videos);
+		}) .fail( function(d, textStatus, error) {
+			console.error("getJSON failed, status: " + textStatus + ", error: "+error)
+		});
+	}
+	
+	self.updateVideo = function(video) {
+		$.ajax({
+			type: "POST",
+			url: "/video",
+			data: JSON.stringify(video),
+			contentType: "application/json; charset=utf-8",
+			dataType: "json",
+			success: function(data){},
+			failure: function(errMsg) {
+				console(errMsg);
+			}
+		});
+	}
+	
+	self.updateAll = function() {
+		ko.utils.arrayForEach( self.videos(), function(v) {
+			self.updateVideo( ko.mapping.toJS(v) );
+		});
+		self.refreshVideos();
+	}
+	
+	self.uploadVideo = function(){
+		var formData = new FormData($('#uploadForm')[0]);
+		
+		$.ajax({
+			url: self.uploadUrl(),  //Server script to process data
+			type: 'POST',
+			success: self.hideUploadForm,
+			error: function() {alert("Upload of video failed");},
+			// Form data
+			data: formData,
+			//Options to tell jQuery not to process data or worry about content-type.
+			cache: false,
+			contentType: false,
+			processData: false
+		});
+	}
+	
+	self.showUploadForm = function(video) {
+		self.uploadUrl(video.dataUrl());
+	}
+	
+	self.hideUploadForm = function() {
+		self.uploadUrl(null);
+	}
+
+	self.refreshVideos();
+}
+
+ko.applyBindings(new ViewModel());
+})
+</script>
+
+</head>
+<body>
+<div id="display">
+<h1>Video List</h1>
+<h2 data-bind="visible: videos().length == 0">No Videos have been uploaded</h2>
+<table data-bind="visible: videos().length > 0">
+    <thead><tr>
+        <th>id</th><th>Title</th><th>Duration</th><th>Subject</th><th>Location</th><th>Content Type</th><th>dataUrl</th>
+    </tr></thead>
+    <tbody data-bind="foreach: videos">
+    <tr>
+		<td data-bind="text: id"></td>
+		<td><input data-bind="value: title"/></td>
+		<td><input type="number" data-bind="numeric, value: duration"/></td>
+		<td><input data-bind="value: subject"/></td>
+		<td><input data-bind="value: location"/></td>
+		<td><input data-bind="value: contentType"/></td>
+		<td data-bind="visible: id() != null"><a target="_blank" data-bind="attr: { href: dataUrl, title: dataUrl }">Video</a></td>
+		<td data-bind="visible: id() != null"><button data-bind="click: $root.showUploadForm">Upload video</button> </td>
+    </tr>    
+	</tbody>
+</table>
+
+<button data-bind="click: refreshVideos">Refresh list</button>
+<button data-bind="click: updateAll">Update all videos</button>
+<button data-bind="click: addVideo">Add a video</button> 
+</div>
+<div id="overlay" class="overlay" data-bind="visible: uploadUrl() != null"></div>
+<div id="modal" class="modal" data-bind="visible: uploadUrl() != null">
+	<h3>Select a file to upload</h3>
+	<form id="uploadForm" class="uploadForm" enctype="multipart/form-data">
+		<input name="data" type="file" /><br/>
+		<button data-bind="click: uploadVideo">Upload</button><button data-bind="click: hideUploadForm">Cancel</button> 
+	</form>
+</div>
+</body>
+</html>
