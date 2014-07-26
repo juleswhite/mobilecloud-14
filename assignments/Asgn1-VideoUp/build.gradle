@@ -24,14 +24,6 @@ compileJava {
 	targetCompatibility = 1.7
 }
 
-sourceSets {
-    main {
-        java {
-            compileClasspath += files(sourceSets.test.java.srcDirs)
-        }
-    }
-}
-
 war {
     baseName = 'gs-convert-jar-to-war'
     version =  '0.1.0'
