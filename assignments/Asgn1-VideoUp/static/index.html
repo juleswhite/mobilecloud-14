@@ -67,6 +67,20 @@ function Video() { return {id: null, title: null, duration: null, location: null
 function ViewModel() {
 	var self = this;
 	
+	
+	self.contentTypes = [
+		"video/avi",
+		"video/mpeg",
+		"video/mp4", 
+		"video/ogg",
+		"video/quicktime",
+		"video/webm",
+		"video/x-matroska",
+		"video/x-ms-wmv",
+		"video/x-flv" 
+	];
+
+	
 	self.videos = ko.mapping.fromJS([]);
 	self.selectedVideo = ko.observable(null);
 	self.uploadFile = ko.observable(null);
@@ -163,7 +177,7 @@ ko.applyBindings(new ViewModel());
 		<td><input type="number" data-bind="numeric, value: duration"/></td>
 		<td><input data-bind="value: subject"/></td>
 		<td><input data-bind="value: location"/></td>
-		<td><input data-bind="value: contentType"/></td>
+		<td><select data-bind="options: $root.contentTypes, value: contentType"></select></td>
 		<td data-bind="visible: id() != null"><a target="_blank" data-bind="attr: { href: dataUrl, title: dataUrl}">View Video</a></td>
 		<td data-bind="visible: id() != null"><button data-bind="click: $root.showUploadForm">Upload video</button> </td>
     </tr>    
@@ -184,7 +198,7 @@ ko.applyBindings(new ViewModel());
 		<input name="data" type="file" data-bind="value: uploadFile"/><br/>
 	</form>
 	<button data-bind="click: uploadVideo, enable: uploadFile() != null">Upload</button>
-	<button data-bind="click: hideUploadForm">Cancel</button>
+	<button data-bind="click: hideUploadForm, enable:true">Cancel</button>
 
 
 </div>
