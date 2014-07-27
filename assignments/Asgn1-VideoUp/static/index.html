@@ -2,6 +2,28 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
+<!-- 
+Sample single-page client application for assignment 1 of 
+the Coursera/Vanderbilt University Mobile Cloud course.
+
+Copyright 2014 TP Diffenbach
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+
+<meta name="dcterms.rightsHolder" content="TP Diffenbach"/>
+<meta name="dcterms.dateCopyrighted" content="2014"/>
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <title>Sample Video Client</title>
 <style> 
 button { width: 150px;}
@@ -67,7 +89,6 @@ function Video() { return {id: null, title: null, duration: null, location: null
 function ViewModel() {
 	var self = this;
 	
-	
 	self.contentTypes = [
 		"video/avi",
 		"video/mpeg",
@@ -80,7 +101,6 @@ function ViewModel() {
 		"video/x-flv" 
 	];
 
-	
 	self.videos = ko.mapping.fromJS([]);
 	self.selectedVideo = ko.observable(null);
 	self.uploadFile = ko.observable(null);
@@ -99,14 +119,14 @@ function ViewModel() {
 	
 	self.updateVideo = function(video) {
 		$.ajax({
-			type: "POST",
 			url: "/video",
+			type: "POST",
 			data: JSON.stringify(video),
 			contentType: "application/json; charset=utf-8",
 			dataType: "json",
 			success: function(data){},
 			failure: function(errMsg) {
-				console(errMsg);
+				alert(errMsg);
 			}
 		});
 	}
@@ -124,10 +144,10 @@ function ViewModel() {
 		$.ajax({
 			url: self.selectedVideo().dataUrl(),  //Server script to process data
 			type: 'POST',
-			success: self.hideUploadForm,
-			error: function() {alert("Upload of video failed");},
 			// Form data
 			data: formData,
+			success: self.hideUploadForm,
+			error: function() {alert("Upload of video failed");},
 			//Options to tell jQuery not to process data or worry about content-type.
 			cache: false,
 			contentType: false,
@@ -142,16 +162,11 @@ function ViewModel() {
 	self.hideUploadForm = function() {
 		self.selectedVideo(null);
 		self.uploadFile(null);
-		return false;
 	}
 	
 	self.selectedVideoFormattedName = function() {
 		var sv = self.selectedVideo();
 		return sv == null ? null : sv.title() + " (id: " + sv.id() + ")";
-	}
-	
-	self.openWindow = function(video) {
-		var w = window.open(video().dataUrl(), "video" + video.id());
 	}
 	
 	self.refreshVideos();
@@ -194,13 +209,11 @@ ko.applyBindings(new ViewModel());
 		<span data-bind="text: selectedVideoFormattedName()"></span>
 	</h3>
 	
-	<form id="uploadForm" class="uploadForm" enctype="multipart/form-data" onsubmit="return false;">
-		<input name="data" type="file" data-bind="value: uploadFile"/><br/>
+	<form id="uploadForm" class="uploadForm" enctype="multipart/form-data">
+		<input name="data" type="file" data-bind="value: uploadFile"/>
 	</form>
 	<button data-bind="click: uploadVideo, enable: uploadFile() != null">Upload</button>
 	<button data-bind="click: hideUploadForm, enable:true">Cancel</button>
-
-
 </div>
 </body>
 </html>
