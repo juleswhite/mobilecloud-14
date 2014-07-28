@@ -15,7 +15,7 @@
  * limitations under the License.
  * 
  */
-package org.magnum.dataup;
+package org.magnum.dataup.controller;
 
 import org.springframework.stereotype.Controller;
 
