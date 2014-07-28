@@ -1,3 +1,5 @@
+# Assignment 1 Covering Weeks 1-3
+
 ## Running the Application
 
 __You do not use "jettyRun" to launch this application. Please read these instructions__
