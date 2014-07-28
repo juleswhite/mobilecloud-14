@@ -27,6 +27,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 
 import org.magnum.dataup.model.Video;
+import org.springframework.stereotype.Service;
 
 /**
  * This class provides a simple implementation to store video binary
@@ -36,25 +37,12 @@ import org.magnum.dataup.model.Video;
  * @author jules
  *
  */
+@Service
 public class VideoFileManager {
 
-	/**
-	 * This static factory method creates and returns a 
-	 * VideoFileManager object to the caller. Feel free to customize
-	 * this method to take parameters, etc. if you want.
-	 * 
-	 * @return
-	 * @throws IOException
-	 */
-	public static VideoFileManager get() throws IOException {
-		return new VideoFileManager();
-	}
-	
 	private Path targetDir_ = Paths.get("videos");
 	
-	// The VideoFileManager.get() method should be used
-	// to obtain an instance
-	private VideoFileManager() throws IOException{
+	public VideoFileManager() throws IOException{
 		if(!Files.exists(targetDir_)){
 			Files.createDirectories(targetDir_);
 		}
