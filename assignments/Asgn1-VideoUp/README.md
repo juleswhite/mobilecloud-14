@@ -218,9 +218,33 @@ official grade.
 - A valid solution is going to have at least one class annotated with @Controller
 - There will probably need to be at least 4 different methods annotated with @RequestMapping to
   implement the HTTP API described
+- Any Controller method can take an HttpServletRequest or HttpServletResponse as parameters to 
+  gain low-level access/control over the HTTP messages. Spring will automatically fill in these
+  parameters when your Controller's method is invoked:
+```java
+        ...
+        @RequestMapping("/some/path/{id}")
+        public MyObject doSomething(
+                   @PathVariable("id") String id, 
+                   @RequestParam("something") String data,
+                   HttpServletResponse response) {
+         
+            // Maybe you want to set the status code with the response
+            // or write some binary data to an OutputStream obtained from
+            // the HttpServletResponse object
+            ....       
+        }
+        
+```
+- The IDs must be of type long. The tests send long values to the server and will generate
+  400 response codes if you use an int.
+- If you get an error 400, you have incorrectly specified the parameter values that the method
+  should accept and their mapping to HTTP parameters.
 - One of the Controller methods that is annotated with @RequestMapping is probably going to need 
   to take an HttpServletResponse object as a parameter and use this object to write out binary data 
   that should be sent to the client. 
+- There are multiple ways to implement most pieces of the application. Any solution that passes
+  the tests will be given full credit.
 - None of your Controllers or other classes should "implement VideoSvcApi" -- which is an interface
   that is only used to create a Retrofit client. None of your classes should look like this:
 ```java
