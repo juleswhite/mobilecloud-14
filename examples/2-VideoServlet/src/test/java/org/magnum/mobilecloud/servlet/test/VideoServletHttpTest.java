@@ -47,7 +47,7 @@ import org.magnum.mobilecloud.video.servlet.VideoServlet;
  */
 public class VideoServletHttpTest {
 
-	private final String TEST_URL = "http://localhost:8080/2-VideoServlet/video";
+	private final String TEST_URL = "http://localhost:8080/video";
 
 	// The HTTP client or "fake browser" that we are going to sue to send
 	// requests to the VideoServlet

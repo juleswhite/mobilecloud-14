@@ -6,6 +6,9 @@ apply plugin: 'jetty'
 stopPort = 8081 
 stopKey = 'stopKey'
 
+jettyRun.contextPath = ''
+jettyRunWar.contextPath = ''
+
 repositories {
     mavenCentral()
 }

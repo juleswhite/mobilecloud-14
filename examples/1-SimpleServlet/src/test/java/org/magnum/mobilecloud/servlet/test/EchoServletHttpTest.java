@@ -23,7 +23,7 @@ public class EchoServletHttpTest {
 	// By default, the test server will be running on localhost and listening to
 	// port 8080. If the server is running and you can't connect to it with this test,
 	// ensure that a firewall (e.g. Windows Firewall) isn't blocking access to it.
-	private final String TEST_URL = "http://localhost:8080/1-SimpleServlet/echo";
+	private final String TEST_URL = "http://localhost:8080/echo";
 	
 	/**
 	 * This test sends a GET request with a msg parameter and

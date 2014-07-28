@@ -15,7 +15,7 @@ and then type "jettyStop" for the task.
 After launching the EchoServlet, you can interact with it by opening a web
 browser to:
 
-http://localhost:8080/1-SimpleServlet/echo?msg=1234test
+http://localhost:8080/echo?msg=1234test
 
 Changing the "msg" URL query parameter will allow you to send different values
 to echo to the EchoServlet.
