@@ -26,7 +26,8 @@ limitations under the License.
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <title>Sample Video Client</title>
 <style> 
-button { width: 150px;}
+button { width: 200px;}
+td button { width: 100%;}
 h3 { font-family: Verdana, Geneva, sans-serif; margin-top:0px;}
 h1 { font-family: Verdana, Geneva, sans-serif; }
 #modal {
@@ -49,6 +50,8 @@ h1 { font-family: Verdana, Geneva, sans-serif; }
 	opacity: 0.5;
 	filter: alpha(opacity=50);
 }
+
+.spacer {width: 20px;}
 </style>
 <script type="text/javascript" src="http://ajax.aspnetcdn.com/ajax/jQuery/jquery-2.1.1.min.js"></script>
 <script type="text/javascript" src="http://ajax.aspnetcdn.com/ajax/knockout/knockout-3.0.0.js"></script>
@@ -83,7 +86,39 @@ ko.bindingHandlers.numeric = {
 
 
 // video constructor, only for added videos
-function Video() { return {id: null, title: null, duration: null, location: null, subject: null, contentType: "video/mp4", dataUrl: null};}
+var Video = function() { 
+	return {id: null, 
+			title: null, 
+			duration: null, 
+			location: null, 
+			subject: null, 
+			contentType: "video/mp4", 
+			dataUrl: null,
+			status: ko.observable({ state: "Unknown" })
+			};
+}
+
+// Video to knockout mapped Video, adding the status
+var VideoKOMapping = function(video) { 
+	var ret = ko.mapping.fromJS(video, this);
+	ret.status = ko.observable({ state: "Unknown" });
+	return ret;
+}
+
+var mapping = { 
+	create: function(options) {
+		return new VideoKOMapping(options.data);
+	},
+	ignore: ["status"]
+};
+
+var mapping2 = { 
+	update: function(options) {
+		options.data.status = { state: "Unknown" } ;
+		return options.data;
+	}
+};
+
 
 // the client-side model
 function ViewModel() {
@@ -101,17 +136,17 @@ function ViewModel() {
 		"video/x-flv" 
 	];
 
-	self.videos = ko.mapping.fromJS([]);
+	self.videos = ko.mapping.fromJS([], mapping);
 	self.selectedVideo = ko.observable(null);
 	self.uploadFile = ko.observable(null);
 	
 	self.addVideo = function() {
-		self.videos.push(ko.mapping.fromJS(new Video()))
+		self.videos.push(ko.mapping.fromJS(new Video(), mapping))
 	}
 	
 	self.refreshVideos = function() {
 		$.getJSON("/video", function(data) {
-			ko.mapping.fromJS(data, self.videos);
+			 ko.mapping.fromJS(data, self.videos);
 		}) .fail( function(d, textStatus, error) {
 			console.error("getJSON failed, status: " + textStatus + ", error: "+error)
 		});
@@ -121,10 +156,12 @@ function ViewModel() {
 		$.ajax({
 			url: "/video",
 			type: "POST",
-			data: JSON.stringify(video),
+			data: ko.mapping.toJSON(video),
 			contentType: "application/json; charset=utf-8",
 			dataType: "json",
-			success: function(data){},
+			success: function(data){ 
+				ko.mapping.fromJS(data, video); 
+			},
 			failure: function(errMsg) {
 				alert(errMsg);
 			}
@@ -133,9 +170,10 @@ function ViewModel() {
 	
 	self.updateAll = function() {
 		ko.utils.arrayForEach( self.videos(), function(v) {
-			self.updateVideo( ko.mapping.toJS(v) );
+			self.updateVideo(v);
 		});
-		self.refreshVideos();
+		// no longer needed, as we update in place
+		//self.refreshVideos();
 	}
 	
 	self.uploadVideo = function(){
@@ -143,11 +181,17 @@ function ViewModel() {
 		
 		$.ajax({
 			url: self.selectedVideo().dataUrl(),  //Server script to process data
+			
 			type: 'POST',
 			// Form data
 			data: formData,
-			success: self.hideUploadForm,
-			error: function() {alert("Upload of video failed");},
+			success: function(status) { 
+				self.selectedVideo().status(status);  
+				self.hideUploadForm();
+			},
+			error: function() {
+				alert("Upload of video failed");
+			},
 			//Options to tell jQuery not to process data or worry about content-type.
 			cache: false,
 			contentType: false,
@@ -183,7 +227,8 @@ ko.applyBindings(new ViewModel());
 <h2 data-bind="visible: videos().length == 0">No Videos have been uploaded</h2>
 <table data-bind="visible: videos().length > 0">
     <thead><tr>
-        <th>id</th><th>Title</th><th>Duration</th><th>Subject</th><th>Location</th><th>Content Type</th><th>dataUrl</th>
+        <th>id</th><th>Title</th><th>Duration</th><th>Subject</th><th>Location</th><th>Content Type</th><th></th>
+		 <th class="spacer"></th><th>Video Status</th><th>dataUrl</th>
     </tr></thead>
     <tbody data-bind="foreach: videos">
     <tr>
@@ -193,15 +238,18 @@ ko.applyBindings(new ViewModel());
 		<td><input data-bind="value: subject"/></td>
 		<td><input data-bind="value: location"/></td>
 		<td><select data-bind="options: $root.contentTypes, value: contentType"></select></td>
-		<td data-bind="visible: id() != null"><a target="_blank" data-bind="attr: { href: dataUrl, title: dataUrl}">View Video</a></td>
-		<td data-bind="visible: id() != null"><button data-bind="click: $root.showUploadForm">Upload video</button> </td>
+		<td><button data-bind="click: $root.updateVideo">Post</button></td>
+		<td></td>
+		<td data-bind="text: status().state"></td>
+		<td data-bind="visible: dataUrl != null"><a target="_blank" data-bind="attr: { href: dataUrl, title: dataUrl}">View Video</a></td>
+		<td data-bind="visible: id() != null"><button data-bind="click: $root.showUploadForm">Post video</button> </td>
     </tr>    
 	</tbody>
 </table>
 
-<button data-bind="click: refreshVideos">Refresh list</button>
-<button data-bind="click: updateAll">Update all videos</button>
-<button data-bind="click: addVideo">Add a video</button> 
+<button data-bind="click: refreshVideos">Refresh list (GET)</button>
+<button data-bind="click: updateAll">Update all videos (POSTs)</button>
+<button data-bind="click: addVideo">Add a video (client-side)</button> 
 </div>
 <div id="overlay" class="overlay" data-bind="visible: selectedVideo() != null"></div>
 <div id="modal" class="modal" data-bind="visible: selectedVideo() != null">
