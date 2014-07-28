@@ -27,7 +27,8 @@ limitations under the License.
 <title>Sample Video Client</title>
 <style> 
 button { width: 200px;}
-td button { width: 100%;}
+th { background-color: #AAAAAA}
+td > button { width: 100%;}
 h3 { font-family: Verdana, Geneva, sans-serif; margin-top:0px;}
 h1 { font-family: Verdana, Geneva, sans-serif; }
 #modal {
@@ -52,6 +53,10 @@ h1 { font-family: Verdana, Geneva, sans-serif; }
 }
 
 .spacer {width: 20px;}
+.space-after {padding-right: 2em;}
+
+ 
+
 </style>
 <script type="text/javascript" src="http://ajax.aspnetcdn.com/ajax/jQuery/jquery-2.1.1.min.js"></script>
 <script type="text/javascript" src="http://ajax.aspnetcdn.com/ajax/knockout/knockout-3.0.0.js"></script>
@@ -112,13 +117,6 @@ var mapping = {
 	ignore: ["status"]
 };
 
-var mapping2 = { 
-	update: function(options) {
-		options.data.status = { state: "Unknown" } ;
-		return options.data;
-	}
-};
-
 
 // the client-side model
 function ViewModel() {
@@ -139,6 +137,7 @@ function ViewModel() {
 	self.videos = ko.mapping.fromJS([], mapping);
 	self.selectedVideo = ko.observable(null);
 	self.uploadFile = ko.observable(null);
+	self.statuses = 
 	
 	self.addVideo = function() {
 		self.videos.push(ko.mapping.fromJS(new Video(), mapping))
@@ -181,7 +180,6 @@ function ViewModel() {
 		
 		$.ajax({
 			url: self.selectedVideo().dataUrl(),  //Server script to process data
-			
 			type: 'POST',
 			// Form data
 			data: formData,
@@ -227,29 +225,44 @@ ko.applyBindings(new ViewModel());
 <h2 data-bind="visible: videos().length == 0">No Videos have been uploaded</h2>
 <table data-bind="visible: videos().length > 0">
     <thead><tr>
-        <th>id</th><th>Title</th><th>Duration</th><th>Subject</th><th>Location</th><th>Content Type</th><th></th>
-		 <th class="spacer"></th><th>Video Status</th><th>dataUrl</th>
+        <th>id</th><th>Title</th><th>Duration</th><th>Subject</th><th>Location</th>
+				<th>Content Type</th><th class="space-after">Update</th>
+		 <th>Video Status</th><th>dataUrl</th><th>Upload</th>
     </tr></thead>
     <tbody data-bind="foreach: videos">
     <tr>
 		<td data-bind="text: id"></td>
-		<td><input data-bind="value: title"/></td>
-		<td><input type="number" data-bind="numeric, value: duration"/></td>
-		<td><input data-bind="value: subject"/></td>
-		<td><input data-bind="value: location"/></td>
-		<td><select data-bind="options: $root.contentTypes, value: contentType"></select></td>
-		<td><button data-bind="click: $root.updateVideo">Post</button></td>
-		<td></td>
-		<td data-bind="text: status().state"></td>
+		<td><input data-bind="value: title" title="Title of video"/></td>
+		<td><input type="number" data-bind="numeric, value: duration", title="Duration only accepts numbers"/></td>
+		<td><input data-bind="value: subject" title="Subject of video"/></td>
+		<td><input data-bind="value: location" title="Location of video"/></td>
+		<td><select data-bind="options: $root.contentTypes, value: contentType" title="Content Type of video"></select></td>
+		<td class="space-after">
+			<button data-bind="click: $root.updateVideo, 
+				attr: {title:'POSTs metadata for id: ' + id() + ' to /video, replacing this row with returned JSON'}">
+				POST
+			</button>
+		</td>
+		<td data-bind="text: status().state" title="Status of uploaded video"></td>
 		<td data-bind="visible: dataUrl != null"><a target="_blank" data-bind="attr: { href: dataUrl, title: dataUrl}">View Video</a></td>
-		<td data-bind="visible: id() != null"><button data-bind="click: $root.showUploadForm">Post video</button> </td>
+		<td data-bind="visible: id() != null">
+			<button data-bind="click: $root.showUploadForm, attr: {title:'POSTs video data to /video/' + id() + '/data'}">
+			POST video
+			</button>
+		</td>
     </tr>    
 	</tbody>
 </table>
 
-<button data-bind="click: refreshVideos">Refresh list (GET)</button>
-<button data-bind="click: updateAll">Update all videos (POSTs)</button>
-<button data-bind="click: addVideo">Add a video (client-side)</button> 
+<button data-bind="click: refreshVideos" title="Replace video list with a fresh copy of all video metadata from the server, by GETting /video">
+Refresh list (GET)
+</button>
+<button data-bind="click: updateAll" title="Send metadata for each row in the list to the server, by POSTing each row in the list to /video">
+Update all videos (POSTs)
+</button>
+<button data-bind="click: addVideo" title="Add a new, empty, row to the list in the browser. No server call is made.">
+Add a video (client-side)
+</button> 
 </div>
 <div id="overlay" class="overlay" data-bind="visible: selectedVideo() != null"></div>
 <div id="modal" class="modal" data-bind="visible: selectedVideo() != null">
@@ -258,10 +271,13 @@ ko.applyBindings(new ViewModel());
 	</h3>
 	
 	<form id="uploadForm" class="uploadForm" enctype="multipart/form-data">
-		<input name="data" type="file" data-bind="value: uploadFile"/>
+		<input name="data" type="file" data-bind="value: uploadFile" title="Select a video from this computer to upload."/>
 	</form>
-	<button data-bind="click: uploadVideo, enable: uploadFile() != null">Upload</button>
-	<button data-bind="click: hideUploadForm, enable:true">Cancel</button>
+	<button data-bind="click: uploadVideo, enable: uploadFile() != null, 
+		attr: {title: 'Upload the video'}">
+		Upload
+	</button>
+	<button data-bind="click: hideUploadForm, enable:true", title="Cancel upload and clear file name">Cancel</button>
 </div>
 </body>
 </html>
