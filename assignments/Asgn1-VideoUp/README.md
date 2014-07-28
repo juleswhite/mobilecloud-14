@@ -1,16 +1,3 @@
-## This Assignment is in Beta
-
-This is a beta preview of the assignment. The official version will be released soon, 
-but will not change substantially. Our plan is to keep the core requirements and code 
-base the same -- ideally there will be no changes at all. The beta release may have bugs 
-and/or other issues that will be resolved before the final version is released. You 
-are welcome to go ahead and complete the assignment. However, since this assignment 
-is in beta, you may be need to update your assignment or resubmit it for regrading 
-after the final version is released. 
-
-Please post any bugs or ambiguities that you find in the Assignment 1 forum
-[https://class.coursera.org/mobilecloud-001/forum/list?forum_id=10010].
-
 ## Running the Application
 
 __You do not use "jettyRun" to launch this application. Please read these instructions__
