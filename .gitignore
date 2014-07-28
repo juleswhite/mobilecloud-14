@@ -1,3 +1,4 @@
+target
 .recommenders
 .metadata
 .gradle
@@ -8,4 +9,6 @@ build
 .settings
 .classpath
 .private
+.idea
+*.iml
 coursera-submission

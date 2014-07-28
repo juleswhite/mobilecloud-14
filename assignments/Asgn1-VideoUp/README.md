@@ -1,15 +1,4 @@
-## This Assignment is in Beta
-
-This is a beta preview of the assignment. The official version will be released soon, 
-but will not change substantially. Our plan is to keep the core requirements and code 
-base the same -- ideally there will be no changes at all. The beta release may have bugs 
-and/or other issues that will be resolved before the final version is released. You 
-are welcome to go ahead and complete the assignment. However, since this assignment 
-is in beta, you may be need to update your assignment or resubmit it for regrading 
-after the final version is released. 
-
-Please post any bugs or ambiguities that you find in the Assignment 1 forum
-[https://class.coursera.org/mobilecloud-001/forum/list?forum_id=10010].
+# Assignment 1 Covering Weeks 1-3
 
 ## Running the Application
 
@@ -96,9 +85,9 @@ POST /video/{id}/data
      Video. A client MUSTcreate* a Video first by sending a POST to /video
      and getting the identifier for the newly created Video object before
      sending a POST to /video/{id}/data. 
-   - The endpoint should return VideoStatus.READY if the request succeeds and
-     the appropriate HTTP error status otherwise. VideoStatus.PROCESSING is
-     not used in this assignment but is present in VideoStatus.
+   - The endpoint should return a VideoStatus object with state=VideoState.READY
+     if the request succeeds and the appropriate HTTP error status otherwise.
+     VideoState.PROCESSING is not used in this assignment but is present in VideoState.
    - Rather than a PUT request, a POST is used because, by default, Spring 
      does not support a PUT with multipart data due to design decisions in the
      Commons File Upload library: https://issues.apache.org/jira/browse/FILEUPLOAD-197
@@ -218,9 +207,33 @@ official grade.
 - A valid solution is going to have at least one class annotated with @Controller
 - There will probably need to be at least 4 different methods annotated with @RequestMapping to
   implement the HTTP API described
+- Any Controller method can take an HttpServletRequest or HttpServletResponse as parameters to 
+  gain low-level access/control over the HTTP messages. Spring will automatically fill in these
+  parameters when your Controller's method is invoked:
+```java
+        ...
+        @RequestMapping("/some/path/{id}")
+        public MyObject doSomething(
+                   @PathVariable("id") String id, 
+                   @RequestParam("something") String data,
+                   HttpServletResponse response) {
+         
+            // Maybe you want to set the status code with the response
+            // or write some binary data to an OutputStream obtained from
+            // the HttpServletResponse object
+            ....       
+        }
+        
+```
+- The IDs must be of type long. The tests send long values to the server and will generate
+  400 response codes if you use an int.
+- If you get an error 400, you have incorrectly specified the parameter values that the method
+  should accept and their mapping to HTTP parameters.
 - One of the Controller methods that is annotated with @RequestMapping is probably going to need 
   to take an HttpServletResponse object as a parameter and use this object to write out binary data 
   that should be sent to the client. 
+- There are multiple ways to implement most pieces of the application. Any solution that passes
+  the tests will be given full credit.
 - None of your Controllers or other classes should "implement VideoSvcApi" -- which is an interface
   that is only used to create a Retrofit client. None of your classes should look like this:
 ```java
