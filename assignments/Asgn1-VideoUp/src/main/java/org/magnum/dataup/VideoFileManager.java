@@ -90,8 +90,7 @@ public class VideoFileManager {
 	 * @throws IOException 
 	 */
 	public void copyVideoData(Video v, OutputStream out) throws IOException {
-		Path source = getVideoPath(v);
-		if(!Files.exists(source)){
+		if(!hasVideoData(v)){
 			throw new FileNotFoundException("Unable to find the referenced video file for videoId:"+v.getId());
 		}
 		Files.copy(source, out);

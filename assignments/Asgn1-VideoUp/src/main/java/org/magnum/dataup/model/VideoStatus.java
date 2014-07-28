@@ -51,7 +51,6 @@ public class VideoStatus {
 	private VideoState state;
 
 	public VideoStatus(VideoState state) {
-		super();
 		this.state = state;
 	}
 
