@@ -96,9 +96,9 @@ POST /video/{id}/data
      Video. A client MUSTcreate* a Video first by sending a POST to /video
      and getting the identifier for the newly created Video object before
      sending a POST to /video/{id}/data. 
-   - The endpoint should return VideoStatus.READY if the request succeeds and
-     the appropriate HTTP error status otherwise. VideoStatus.PROCESSING is
-     not used in this assignment but is present in VideoStatus.
+   - The endpoint should return VideoStatus initialized with VideoStatus.READY 
+     if the request succeeds and the appropriate HTTP error status otherwise
+     VideoStatus.PROCESSING is not used in this assignment but is present in VideoStatus.
    - Rather than a PUT request, a POST is used because, by default, Spring 
      does not support a PUT with multipart data due to design decisions in the
      Commons File Upload library: https://issues.apache.org/jira/browse/FILEUPLOAD-197
