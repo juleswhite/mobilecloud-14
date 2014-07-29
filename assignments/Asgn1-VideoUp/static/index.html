@@ -31,7 +31,7 @@ td > button { width: 100%;}
 th {border-radius:4px;}
 #video-table th { background-color: #AAA;}
 #error-table th { background-color: red;}
-th.empty { background-color: white; width:2em;}
+#video-table th.empty { background-color: white; width:2em;}
 
 h2, h3 { font-family: Verdana, Geneva, sans-serif; margin-top:0px;}
 h1 { font-family: Verdana, Geneva, sans-serif; }
@@ -80,6 +80,14 @@ tr.error td.md,
 tr.error td.md input,
 tr.error td.md select {background-color: red;}
 
+tr.data-updating td.d,
+tr.data-updating td.d input,
+tr.data-updating td.d select {background-color: yellow;}
+
+tr.data-error td.d,
+tr.data-error td.d input,
+tr.data-error td.d select {background-color: red;}
+
 tr .empty {background-color: #FFF}
 
 #error-table tr, #error-table tr td {background-color: #F00}
@@ -97,6 +105,8 @@ li.borderRadio { display: inline;}
 #timeout input { width: 4em;}
 
 #error-panel-label {display: inline; padding: 2em;}
+
+#main-controls {margin-top: 1em;}
 </style>
 <script type="text/javascript" src="http://ajax.aspnetcdn.com/ajax/jQuery/jquery-2.1.1.min.js"></script>
 <script type="text/javascript" src="http://ajax.aspnetcdn.com/ajax/knockout/knockout-3.0.0.js"></script>
@@ -134,6 +144,11 @@ ko.bindingHandlers.numeric = {
 function ViewModel() {
 	var self = this;
 	
+	// "constants"
+	self.OK = 0;
+	self.UPDATING = 1;
+	self.ERROR = 2;
+	
 	// video constructor, only for added videos.
 	self.Video = function() { 
 		return {
@@ -152,8 +167,8 @@ function ViewModel() {
 	self.VideoKOMapping = function(video) { 
 		var ret = ko.mapping.fromJS(video, this);
 		ret.status = ko.observable({ state: "Unknown" });
-		ret.updating = ko.observable(true);
-		ret.error = ko.observable(null);
+		ret.metadata = ko.observable(self.UPDATING);
+		ret.data = ko.observable(self.OK);
 		return ret;
 	};
 
@@ -162,7 +177,7 @@ function ViewModel() {
 		create: function(options) {
 			return new self.VideoKOMapping(options.data);
 		},
-		ignore: ["status", "updating", "error"]
+		ignore: ["status", "metadata", "data"]
 	};
 	
 	self.Error = function(id, method, url, params, response, error, additional) {
@@ -189,7 +204,7 @@ function ViewModel() {
 		"video/x-flv" 
 	];
 
-	self.timeoutMs = 300;
+	self.flashTimeoutMs = 300;
 	self.metadataUrl = "/video";
 	self.notyetuploadedStatus = { state:"Not uploaded"};
 	self.borderStyleCss = ko.observable("boxed");
@@ -207,7 +222,7 @@ function ViewModel() {
 		var map = {};
 		ko.utils.arrayForEach(self.videos(), function(v) { 
 			map[v.id()] = v.status();
-			v.updating(true);
+			v.metadata(self.UPDATING);
 		});
 		
 		$.ajax({
@@ -217,8 +232,7 @@ function ViewModel() {
 		}).fail( function(response, textStatus, error) {
 			self.addError("ALL", "GET", self.metadataUrl, "(none)", response.responseText, textStatus, error);
 			ko.utils.arrayForEach(self.videos(), function(v) { 
-				v.updating(false);
-				v.error(true);
+				v.metadata(self.ERROR);
 			});
 		}).done( function(response) { 
 			ko.mapping.fromJS(response, self.videos);
@@ -228,14 +242,14 @@ function ViewModel() {
 			});
 			setTimeout(function() { 
 				ko.utils.arrayForEach(self.videos(), function(v) {
-					v.updating(false);
+					v.metadata(self.OK);
 				});
-			}, self.timeoutMs);
+			}, self.flashTimeoutMs);
 		});
 	}
 	
 	self.updateVideo = function(video) {
-		video.updating(true);
+		video.metadata(self.UPDATING);
 		var id = video.id();
 		var type = "POST";
 		var data = ko.mapping.toJSON(video)
@@ -248,15 +262,14 @@ function ViewModel() {
 			timeout: self.ajaxTimeoutMs()
 		}).fail( function(response, textStatus, error) {
 			self.addError(id, type, self.metadataUrl, data, response.responseText, textStatus, error);
-			video.error(true);
+			video.metadata(self.ERROR);
 		}).done( function(response) { 
 			var uploadStatus = video.status();
 			ko.mapping.fromJS(response, video); 
 			video.status(id == null ?  self.notyetuploadedStatus : uploadStatus);
-			video.error(false);
 			setTimeout(function() {
-				video.updating(false);
-			}, self.timeoutMs);
+				video.metadata(self.OK);
+			}, self.flashTimeoutMs);
 		});
 	}
 	
@@ -270,7 +283,8 @@ function ViewModel() {
 	
 	self.uploadVideo = function() {
 		var formData = new FormData($('#uploadForm')[0]);
-		var video = self.selectedVideo();			
+		var video = self.selectedVideo();
+		video.data(self.UPDATING);
 		var id = video.id();
 		var url = video.dataUrl();
 		var type ="POST";
@@ -288,9 +302,12 @@ function ViewModel() {
 			timeout: self.ajaxTimeoutMs()
 		}).fail( function(response, textStatus, error) {
 			self.addError(id, type, url, filename, response.responseText, textStatus, error);
-			video.error(true);
+			video.data(self.ERROR);
 		}).done( function(status) { 
-			video.status(status);  
+			video.status(status);
+			setTimeout(function() {
+				video.data(self.OK);
+			}, self.flashTimeoutMs);
 		});
 	};
 	
@@ -311,12 +328,21 @@ function ViewModel() {
 	self.addError = function(id, method, url, params, response, error, additional) {
 		self.errors.push( new self.Error(id, method, url, params, response, error, additional) );
 		$('#error-scroll').scrollTop($('#error-scroll')[0].scrollHeight);
-		//$('#error-scroll').scrollTop($('#error-scroll').height());
 	};
 	
 	self.clearErrors = function() {
 		self.errors([]);
 	};
+	
+	self.makeVideoCSS = function(video, index) {
+		return {
+			'even': index() % 2 == 0,
+			'updating':  video.metadata() == self.UPDATING, 
+			'error': 	 video.metadata() == self.ERROR, 
+			'data-updating': video.data() == self.UPDATING, 
+			'data-error': 	 video.data() == self.ERROR
+		};
+	}
 
 	self.refreshVideos();
 }
@@ -339,8 +365,8 @@ ko.applyBindings(new ViewModel());
 						<th>Content Type</th><th>Update</th><th class="empty"></th>
 				 <th>Video Status</th><th>Data Url</th><th>Upload</th>
 			</tr></thead>
-			<tbody data-bind="foreach: videos">
-			<tr data-bind="css: { 'updating': updating, 'error': error, even: $index() % 2 == 0}">
+			<tbody data-bind="foreach: videos">									
+			<tr data-bind="css: $root.makeVideoCSS($data, $index)">
 				<td class="md" data-bind="text: id" 
 					title="Id of video. In a real app (as opposed to this one, for testing), we'd hide the id from users, to prevent them from relying on it and thus preventing us from changing it."></td>
 				<td class="md"><input data-bind="value: title" title="Title of video"/></td>
@@ -373,16 +399,13 @@ ko.applyBindings(new ViewModel());
 	</div>
 	
 	<div id="main-controls">
-		<button data-bind="click: refreshVideos" title="Replace video list with a fresh copy of 
-		all video metadata from the server, by GETting /video">
+		<button data-bind="click: refreshVideos" title="Replace video list with a fresh copy of all video metadata from the server, by GETting /video">
 		Refresh list (GET)
 		</button>
-		<button data-bind="click: updateAll" title="Send metadata for each row in the list to 
-		the server, by POSTing each row in the list to /video">
+		<button data-bind="click: updateAll" title="Send metadata for each row in the list to the server, by POSTing each row in the list to /video">
 		Update all videos (POSTs)
 		</button>
-		<button data-bind="click: addVideo" title="Add a new, empty, row to 
-		the list in the browser. No server call is made.">
+		<button data-bind="click: addVideo" title="Add a new, empty, row to the list in the browser. No server call is made.">
 		Add a video (client-side)
 		</button> 
 		<span id="timeout">Ajax timeout (ms) <input type="number" data-bind="numeric, value: ajaxTimeoutMs"/></span>
@@ -399,7 +422,7 @@ ko.applyBindings(new ViewModel());
 		<h2 id="error-panel-label">Errors</h2>
 		<button data-bind="click: clearErrors, enable: true" title="Clear this error list and hide this error panel.">
 		Clear errors 
-		</button> 
+		</button> <!-- enable true isn't necessary, except that when Firefox gets "tired" it adds disabled="" -->
 		<div id="error-scroll">
 			<table id="error-table" data-bind="css: borderStyleCss">
 				<thead><tr>
