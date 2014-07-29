@@ -31,6 +31,7 @@ th.empty { background-color: white; width:2em;}
 td > button { width: 100%;}
 h2, h3 { font-family: Verdana, Geneva, sans-serif; margin-top:0px;}
 h1 { font-family: Verdana, Geneva, sans-serif; }
+
 #modal {
 	position:fixed;
 	top: 10%;
@@ -54,21 +55,30 @@ h1 { font-family: Verdana, Geneva, sans-serif; }
 
 /* tag cells with metadata describing what they're part of */
 
+table.boxed input, table.boxed select { border: 1px solid grey;}
+table.flat input, table.flat select { border: none;}
+
+tr,
 tr td,
 tr input,
-tr select { background-color: #CFF }
-tr .empty {background-color: #FFF}
+tr select {background-color: #CFF; }
 
-tr.even td, 
+tr.even,
+tr.even td,
 tr.even input,
-tr.even select {background-color: #FFF}
-tr.even .empty {background-color: #FFF}
+tr.even select {background-color: #FFF; }
 
 tr.updating td.md,
 tr.updating td.md input,
-tr.updating td.md select {background-color: yellow}
+tr.updating td.md select {background-color: yellow;}
 
- 
+tr .empty {background-color: #FFF}
+
+
+span.borderRadio { padding-left: 3em;}
+ul.borderRadio  {display: inline; margin: 0; padding: 0; list-style-type: none;}
+li.borderRadio { display:inline;}
+
 
 </style>
 <script type="text/javascript" src="http://ajax.aspnetcdn.com/ajax/jQuery/jquery-2.1.1.min.js"></script>
@@ -109,6 +119,7 @@ function ViewModel() {
 	
 	self.timeoutMs = 300;
 	self.notyetuploadedStatus = { state:"Not uploaded"};
+	self.borderStyleCss = ko.observable("boxed");
 	
 	// video constructor, only for added videos.
 	self.Video = function() { 
@@ -266,7 +277,7 @@ ko.applyBindings(new ViewModel());
 	<h2 data-bind="visible: videos().length == 0">No Videos have been uploaded (was the server stopped?)</h2>
 	<div data-bind="visible: videos().length != 0">
 		<h2>List of videos on the server:</h2>
-		<table>
+		<table data-bind="css: borderStyleCss">
 			<thead><tr>
 				<th>id</th><th>Title</th><th>Duration</th><th>Subject</th><th>Location</th>
 						<th>Content Type</th><th>Update</th><th class="empty"></th>
@@ -314,6 +325,14 @@ ko.applyBindings(new ViewModel());
 		<button data-bind="click: addVideo" title="Add a new, empty, row to the list in the browser. No server call is made.">
 		Add a video (client-side)
 		</button> 
+		
+		<span class="borderRadio">Style:
+			<ul class="borderRadio">
+			<li class="borderRadio"><input type="radio" name="borderstyleGroup" value="flat" data-bind="checked: borderStyleCss" /> Flat</li>
+			<li class="borderRadio"><input type="radio" name="borderstyleGroup" value="boxed" data-bind="checked: borderStyleCss" /> Boxed</li>
+			<li class="borderRadio"><input type="radio" name="borderstyleGroup" value="x" data-bind="checked: borderStyleCss" /> Standard</li>
+			</ul>
+		</span>
 	</div>
 	<div id="textcopy">
 	
