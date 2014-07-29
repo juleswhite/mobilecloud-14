@@ -24,7 +24,7 @@ limitations under the License.
 <meta name="dcterms.rightsHolder" content="TP Diffenbach"/>
 <meta name="dcterms.dateCopyrighted" content="2014"/>
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
-<title>Video Client</title>
+<title>Video Client 1.0</title>
 <style> 
 button { width: 200px;}
 th { background-color: #AAAAAA; border-radius:4px;}
@@ -250,63 +250,70 @@ ko.applyBindings(new ViewModel());
 </head>
 <body>
 <div id="display">
-<h1>Video List</h1>
-<h2 data-bind="visible: videos().length == 0">No Videos have been uploaded (was the server stopped?)</h2>
-<table data-bind="visible: videos().length != 0">
-    <thead><tr>
-        <th>id</th><th>Title</th><th>Duration</th><th>Subject</th><th>Location</th>
-				<th>Content Type</th><th>Update</th><th class="empty"></th>
-		 <th>Video Status</th><th>Data Url</th><th>Upload</th>
-    </tr></thead>
-    <tbody data-bind="foreach: videos">
-    <tr data-bind="css: { 'updating': updating, even: $index() % 2 == 0}">
-		<td class="md" data-bind="text: id"></td>
-		<td class="md"><input data-bind="value: title" title="Title of video"/></td>
-		<td class="md"><input type="number" data-bind="numeric, value: duration", title="Duration only accepts numbers"/></td>
-		<td class="md"><input data-bind="value: subject" title="Subject of video"/></td>
-		<td class="md"><input data-bind="value: location" title="Location of video"/></td>
-		<td class="md"><select data-bind="options: $root.contentTypes, value: contentType" title="Content Type of video"></select></td>
-		<td class="md space-after">
-			<button data-bind="click: $root.updateVideo, 
-				attr: {title:'POSTs metadata for id: ' + id() + ' to /video, replacing this row with returned JSON'}">
-				POST
-			</button>
-		</td>
-		<td class="empty"></td>
-		<td class="d" data-bind="text: status().state" title="Status of uploaded video"></td>
-		<td class="d" data-bind="visible: dataUrl != null">
-			<a target="_blank" data-bind="attr: { href: dataUrl, title: dataUrl}">View video</a>
-		</td>
-		<td class="d" data-bind="visible: id() != null">
-			<button data-bind="click: $root.showUploadForm, attr: {title:'POSTs video data to /video/' + id() + '/data'}">
-			POST video
-			</button>
-		</td>
-    </tr>    
-	</tbody>
-</table>
-
-<button data-bind="click: refreshVideos" title="Replace video list with a fresh copy of all video metadata from the server, by GETting /video">
-Refresh list (GET)
-</button>
-<button data-bind="click: updateAll" title="Send metadata for each row in the list to the server, by POSTing each row in the list to /video">
-Update all videos (POSTs)
-</button>
-<button data-bind="click: addVideo" title="Add a new, empty, row to the list in the browser. No server call is made.">
-Add a video (client-side)
-</button> 
-<div>
-	<p><em>Note:</em> All Video Statuses are initially "Unknown".</p>
-	<p>This is a limitation of the Video Web API, as we can only get the Video Status of a video by uploading it.
-	In this client page, we preserve any <em>known</em> Video Status (from an upload) through metadata updates (POSTs) and list refreshes (GETs). Refreshing the page of course clears all data, as this is a single-page client written in javascript and HTML.</p>
-	
-	<p>This client was written as to test and exercise assignment 1 of the Coursera/Vanderbilt University Online Course 
-	<a href="https://class.coursera.org/mobilecloud-001/">"Programming Cloud Services for Android Handheld Systems"</a>.</p> 
-	
-	<p>This HMTL and javascript client program is copyright &copy; 2014 TP Diffenbach, and licensed under the Apache License: <a href="http://www.apache.org/licenses/LICENSE-2.0">http://www.apache.org/licenses/LICENSE-2.0</a>. Copies (and possibly newer versions) can be obtained from, and bugs reported to, <a href="https://github.com/tpdi/mobilecloud14">https://github.com/tpdi/mobilecloud14</a>.</p>
-	
-	<p>Good luck, and I hope this helps you in the course.</p
-</div>
+	<h1>Video Client 1.0</h1>
+	<h2 data-bind="visible: videos().length == 0">No Videos have been uploaded (was the server stopped?)</h2>
+	<div data-bind="visible: videos().length != 0">
+		<h2>List of videos on the server:</h2>
+		<table>
+			<thead><tr>
+				<th>id</th><th>Title</th><th>Duration</th><th>Subject</th><th>Location</th>
+						<th>Content Type</th><th>Update</th><th class="empty"></th>
+				 <th>Video Status</th><th>Data Url</th><th>Upload</th>
+			</tr></thead>
+			<tbody data-bind="foreach: videos">
+			<tr data-bind="css: { 'updating': updating, even: $index() % 2 == 0}">
+				<td class="md" data-bind="text: id"></td>
+				<td class="md"><input data-bind="value: title" title="Title of video"/></td>
+				<td class="md"><input type="number" data-bind="numeric, value: duration", title="Duration only accepts numbers"/></td>
+				<td class="md"><input data-bind="value: subject" title="Subject of video"/></td>
+				<td class="md"><input data-bind="value: location" title="Location of video"/></td>
+				<td class="md"><select data-bind="options: $root.contentTypes, value: contentType" title="Content Type of video"></select></td>
+				<td class="md space-after">
+					<button data-bind="click: $root.updateVideo, 
+						attr: {title:'POSTs metadata for id: ' + id() + ' to /video, replacing this row with returned JSON'}">
+						POST
+					</button>
+				</td>
+				<td class="empty"></td>
+				<td class="d" data-bind="text: status().state" title="Status of uploaded video"></td>
+				<td class="d" data-bind="visible: dataUrl != null">
+					<a target="_blank" data-bind="attr: { href: dataUrl, title: dataUrl}">View video</a>
+				</td>
+				<td class="d" data-bind="visible: id() != null">
+					<button data-bind="click: $root.showUploadForm, attr: {title:'POSTs video data to /video/' + id() + '/data'}">
+					POST video
+					</button>
+				</td>
+			</tr>    
+			</tbody>
+		</table>
+	</div>
+	<div id="main-controls">
+		<button data-bind="click: refreshVideos" title="Replace video list with a fresh copy of all video metadata from the server, by GETting /video">
+		Refresh list (GET)
+		</button>
+		<button data-bind="click: updateAll" title="Send metadata for each row in the list to the server, by POSTing each row in the list to /video">
+		Update all videos (POSTs)
+		</button>
+		<button data-bind="click: addVideo" title="Add a new, empty, row to the list in the browser. No server call is made.">
+		Add a video (client-side)
+		</button> 
+	</div>
+	<div id="textcopy">
+		<p><em>Note:</em> All Video Statuses are initially "Unknown".</p>
+		<p>This is a limitation of the Video Web API, as we can only get the Video Status of a video by uploading it.
+		In this client page, we preserve any <em>known</em> Video Status (from an upload) through metadata updates (POSTs) and list refreshes (GETs). Refreshing the page of course clears all data, as this is a single-page client written in javascript and HTML.
+		</p>
+		
+		<p>This client was written as to test and exercise assignment 1 of the Coursera/Vanderbilt University Online Course 
+		<a href="https://class.coursera.org/mobilecloud-001/">"Programming Cloud Services for Android Handheld Systems"</a>.
+		</p> 
+		
+		<p>This HMTL and javascript client program is copyright &copy; 2014 TP Diffenbach, and licensed under the Apache License: <a href="http://www.apache.org/licenses/LICENSE-2.0">http://www.apache.org/licenses/LICENSE-2.0</a>. Copies (and possibly newer versions) can be obtained from, and bugs reported to, <a href="https://github.com/tpdi/mobilecloud14">https://github.com/tpdi/mobilecloud14</a>.
+		</p>
+		
+		<p>Good luck, and I hope this helps you in the course.</p>
+	</div>
 </div>
 <div id="overlay" class="overlay" data-bind="visible: selectedVideo() != null"></div>
 <div id="modal" class="modal" data-bind="visible: selectedVideo() != null">
