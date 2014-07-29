@@ -1,6 +1,5 @@
-<!DOCTYPE html PUBLIC"-//W3C//DTD XHTML 1.0 Strict//EN"
-"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
+<!DOCTYPE html>
+<html>
 <head>
 <!-- 
 Sample single-page client application for assignment 1 of 
@@ -104,39 +103,41 @@ ko.bindingHandlers.numeric = {
 };
 
 
-// video constructor, only for added videos
-var Video = function() { 
-	return {id: null, 
+// the client-side model
+function ViewModel() {
+	var self = this;
+	
+	var timeoutMs = 300;
+	
+	// video constructor, only for added videos.
+	var Video = function() { 
+		return {
+			id: null, 
 			title: null, 
 			duration: null, 
 			location: null, 
 			subject: null, 
 			contentType: "video/mp4", 
-			dataUrl: null,
-			status: ko.observable({ state: "Unknown" }),
-			updating: ko.observable(false)
-			};
-}
+			dataUrl: null
+		};
+	};
 
-// Video to knockout mapped Video, adding the status
-var VideoKOMapping = function(video) { 
-	var ret = ko.mapping.fromJS(video, this);
-	ret.status = ko.observable({ state: "Unknown" });
-	ret.updating = ko.observable(false);
-	return ret;
-}
+	// Video to knockout mapped Video, adding the status and state.
+	// added Videos must also be converted through this function.
+	var VideoKOMapping = function(video) { 
+		var ret = ko.mapping.fromJS(video, this);
+		ret.status = ko.observable({ state: "Unknown" });
+		ret.updating = ko.observable(true);
+		return ret;
+	};
 
-var mapping = { 
-	create: function(options) {
-		return new VideoKOMapping(options.data);
-	},
-	ignore: ["status", "updating"]
-};
-
-
-// the client-side model
-function ViewModel() {
-	var self = this;
+	// the ko.mapping options
+	var mapping = { 
+		create: function(options) {
+			return new VideoKOMapping(options.data);
+		},
+		ignore: ["status", "updating"]
+	};
 	
 	self.contentTypes = [
 		"video/avi",
@@ -159,18 +160,26 @@ function ViewModel() {
 	}
 	
 	self.refreshVideos = function() {
+		var map = {};
+		ko.utils.arrayForEach(self.videos(), function(v) { 
+			map[v.id()] = v.status();
+			v.updating(true);
+		});
+		
 		$.getJSON("/video", function(data) {
-			var map = {};
-			ko.utils.arrayForEach( self.videos(), function(v) { 
-				map[v.id()] = v.status();
-			});
 			ko.mapping.fromJS(data, self.videos);
-			ko.utils.arrayForEach( self.videos(), function(v) { 
+			ko.utils.arrayForEach(self.videos(), function(v) { 
 				var s = map[v.id()]; 
 				if(s) v.status(s);
 			});
-		}) .fail( function(d, textStatus, error) {
+		}).fail( function(d, textStatus, error) {
 			console.error("getJSON failed, status: " + textStatus + ", error: "+error)
+		}).done( function() { 
+			setTimeout(function() { 
+				ko.utils.arrayForEach(self.videos(), function(v) {
+					v.updating(false);
+				});
+			}, timeoutMs);
 		});
 	}
 	
@@ -191,8 +200,10 @@ function ViewModel() {
 				alert(errMsg);
 			}
 		}).done( function() { 
-				setTimeout(function() {video.updating(false);}, 400)
-			});
+			setTimeout(function() {
+				video.updating(false);
+			}, timeoutMs);
+		});
 	}
 	
 	self.updateAll = function() {
@@ -201,7 +212,7 @@ function ViewModel() {
 		});
 		// no longer needed, as we update in place
 		//self.refreshVideos();
-	}
+	};
 	
 	self.uploadVideo = function(){
 		var formData = new FormData($('#uploadForm')[0]);
@@ -223,27 +234,27 @@ function ViewModel() {
 			contentType: false,
 			processData: false
 		});
-	}
+	};
 	
 	self.showUploadForm = function(video) {
 		self.selectedVideo(video);
-	}
+	};
 	
 	self.hideUploadForm = function() {
 		self.selectedVideo(null);
 		self.uploadFile(null);
-	}
+	};
 	
 	self.selectedVideoFormattedName = function() {
 		var sv = self.selectedVideo();
 		return sv == null ? null : sv.title() + " (id: " + sv.id() + ")";
-	}
+	};
 	
 	self.refreshVideos();
 }
 
 ko.applyBindings(new ViewModel());
-})
+});
 </script>
 
 </head>
@@ -264,7 +275,7 @@ ko.applyBindings(new ViewModel());
 				<td class="md" data-bind="text: id" 
 					title="Id of video. In a real app (as opposed to this one, for testing), we'd hide the id from users, to prevent them from relying on it and thus preventing us from changing it."></td>
 				<td class="md"><input data-bind="value: title" title="Title of video"/></td>
-				<td class="md"><input type="number" data-bind="numeric, value: duration", title="Duration only accepts numbers"/></td>
+				<td class="md"><input type="number" data-bind="numeric, value: duration" title="Duration only accepts numbers"/></td>
 				<td class="md"><input data-bind="value: subject" title="Subject of video"/></td>
 				<td class="md"><input data-bind="value: location" title="Location of video"/></td>
 				<td class="md"><select data-bind="options: $root.contentTypes, value: contentType" title="Content Type of video"></select></td>
@@ -332,7 +343,7 @@ ko.applyBindings(new ViewModel());
 		attr: {title: 'Upload the video'}">
 		Upload
 	</button>
-	<button data-bind="click: hideUploadForm, enable:true", title="Cancel upload and clear file name">Cancel</button>
+	<button data-bind="click: hideUploadForm, enable:true" title="Cancel upload and clear file name">Cancel</button>
 </div>
 </body>
 </html>
