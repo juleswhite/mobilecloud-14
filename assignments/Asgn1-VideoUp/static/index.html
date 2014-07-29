@@ -262,7 +262,8 @@ ko.applyBindings(new ViewModel());
 			</tr></thead>
 			<tbody data-bind="foreach: videos">
 			<tr data-bind="css: { 'updating': updating, even: $index() % 2 == 0}">
-				<td class="md" data-bind="text: id"></td>
+				<td class="md" data-bind="text: id" 
+					title="Id of video. In a real app (as opposed to this one, for testing), we'd hide the id from users, to prevent them from relying on it and thus preventing us from changing it."></td>
 				<td class="md"><input data-bind="value: title" title="Title of video"/></td>
 				<td class="md"><input type="number" data-bind="numeric, value: duration", title="Duration only accepts numbers"/></td>
 				<td class="md"><input data-bind="value: subject" title="Subject of video"/></td>
@@ -302,14 +303,18 @@ ko.applyBindings(new ViewModel());
 	<div id="textcopy">
 		<p><em>Note:</em> All Video Statuses are initially "Unknown".</p>
 		<p>This is a limitation of the Video Web API, as we can only get the Video Status of a video by uploading it.
-		In this client page, we preserve any <em>known</em> Video Status (from an upload) through metadata updates (POSTs) and list refreshes (GETs). Refreshing the page of course clears all data, as this is a single-page client written in javascript and HTML.
+		In this client page, we preserve any <em>known</em> Video Statuses (from uploads) through metadata updates (POSTs) 
+		and list refreshes (GETs). Refreshing the page of course clears all data, as this is a single-page client written 
+		in javascript and HTML.
 		</p>
 		
-		<p>This client was written as to test and exercise assignment 1 of the Coursera/Vanderbilt University Online Course 
+		<p>This client was written to test and exercise assignment 1 of the Coursera/Vanderbilt University Online Course 
 		<a href="https://class.coursera.org/mobilecloud-001/">"Programming Cloud Services for Android Handheld Systems"</a>.
 		</p> 
 		
-		<p>This HMTL and javascript client program is copyright &copy; 2014 TP Diffenbach, and licensed under the Apache License: <a href="http://www.apache.org/licenses/LICENSE-2.0">http://www.apache.org/licenses/LICENSE-2.0</a>. Copies (and possibly newer versions) can be obtained from, and bugs reported to, <a href="https://github.com/tpdi/mobilecloud14">https://github.com/tpdi/mobilecloud14</a>.
+		<p>This HMTL and javascript client program is copyright &copy; 2014 TP Diffenbach, and licensed under the Apache License, 
+		Version 2.0: <a href="http://www.apache.org/licenses/LICENSE-2.0">http://www.apache.org/licenses/LICENSE-2.0</a>. Copies 
+		(and possibly newer versions) of this program can be obtained from, and bugs reported to, <a href="https://github.com/tpdi/mobilecloud14">https://github.com/tpdi/mobilecloud14</a>.
 		</p>
 		
 		<p>Good luck, and I hope this helps you in the course.</p>
