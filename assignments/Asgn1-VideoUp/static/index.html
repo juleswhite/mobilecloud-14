@@ -27,7 +27,8 @@ limitations under the License.
 <title>Sample Video Client</title>
 <style> 
 button { width: 200px;}
-th { background-color: #AAAAAA}
+th { background-color: #AAAAAA; border-radius:4px;}
+th.empty { background-color: white; width:2em;}
 td > button { width: 100%;}
 h3 { font-family: Verdana, Geneva, sans-serif; margin-top:0px;}
 h1 { font-family: Verdana, Geneva, sans-serif; }
@@ -52,8 +53,21 @@ h1 { font-family: Verdana, Geneva, sans-serif; }
 	filter: alpha(opacity=50);
 }
 
-.spacer {width: 20px;}
-.space-after {padding-right: 2em;}
+/* tag cells with metadata describing what they're part of */
+
+tr td,
+tr input,
+tr select { background-color: #CFF }
+tr .empty {background-color: #FFF}
+
+tr.even td, 
+tr.even input,
+tr.even select {background-color: #FFF}
+tr.even .empty {background-color: #FFF}
+
+tr.updating td.md,
+tr.updating td.md input,
+tr.updating td.md select {background-color: yellow}
 
  
 
@@ -99,7 +113,8 @@ var Video = function() {
 			subject: null, 
 			contentType: "video/mp4", 
 			dataUrl: null,
-			status: ko.observable({ state: "Unknown" })
+			status: ko.observable({ state: "Unknown" }),
+			updating: ko.observable(false)
 			};
 }
 
@@ -107,6 +122,7 @@ var Video = function() {
 var VideoKOMapping = function(video) { 
 	var ret = ko.mapping.fromJS(video, this);
 	ret.status = ko.observable({ state: "Unknown" });
+	ret.updating = ko.observable(false);
 	return ret;
 }
 
@@ -114,7 +130,7 @@ var mapping = {
 	create: function(options) {
 		return new VideoKOMapping(options.data);
 	},
-	ignore: ["status"]
+	ignore: ["status", "updating"]
 };
 
 
@@ -152,6 +168,7 @@ function ViewModel() {
 	}
 	
 	self.updateVideo = function(video) {
+		video.updating(true);
 		$.ajax({
 			url: "/video",
 			type: "POST",
@@ -164,7 +181,9 @@ function ViewModel() {
 			failure: function(errMsg) {
 				alert(errMsg);
 			}
-		});
+		}).done( function() { 
+				setTimeout(function() {video.updating(false);}, 400)
+			});
 	}
 	
 	self.updateAll = function() {
@@ -226,26 +245,29 @@ ko.applyBindings(new ViewModel());
 <table data-bind="visible: videos().length > 0">
     <thead><tr>
         <th>id</th><th>Title</th><th>Duration</th><th>Subject</th><th>Location</th>
-				<th>Content Type</th><th class="space-after">Update</th>
+				<th>Content Type</th><th>Update</th>><th class="empty"></th>
 		 <th>Video Status</th><th>dataUrl</th><th>Upload</th>
     </tr></thead>
     <tbody data-bind="foreach: videos">
-    <tr>
-		<td data-bind="text: id"></td>
-		<td><input data-bind="value: title" title="Title of video"/></td>
-		<td><input type="number" data-bind="numeric, value: duration", title="Duration only accepts numbers"/></td>
-		<td><input data-bind="value: subject" title="Subject of video"/></td>
-		<td><input data-bind="value: location" title="Location of video"/></td>
-		<td><select data-bind="options: $root.contentTypes, value: contentType" title="Content Type of video"></select></td>
-		<td class="space-after">
+    <tr data-bind="css: { 'updating': updating, even: $index() % 2 == 0}">
+		<td class="md" data-bind="text: id"></td>
+		<td class="md"><input data-bind="value: title" title="Title of video"/></td>
+		<td class="md"><input type="number" data-bind="numeric, value: duration", title="Duration only accepts numbers"/></td>
+		<td class="md"><input data-bind="value: subject" title="Subject of video"/></td>
+		<td class="md"><input data-bind="value: location" title="Location of video"/></td>
+		<td class="md"><select data-bind="options: $root.contentTypes, value: contentType" title="Content Type of video"></select></td>
+		<td class="md space-after">
 			<button data-bind="click: $root.updateVideo, 
 				attr: {title:'POSTs metadata for id: ' + id() + ' to /video, replacing this row with returned JSON'}">
 				POST
 			</button>
 		</td>
-		<td data-bind="text: status().state" title="Status of uploaded video"></td>
-		<td data-bind="visible: dataUrl != null"><a target="_blank" data-bind="attr: { href: dataUrl, title: dataUrl}">View Video</a></td>
-		<td data-bind="visible: id() != null">
+		<td class="empty"></td>
+		<td class="d" data-bind="text: status().state" title="Status of uploaded video"></td>
+		<td class="d" data-bind="visible: dataUrl != null">
+			<a target="_blank" data-bind="attr: { href: dataUrl, title: dataUrl}">View Video</a>
+		</td>
+		<td class="d" data-bind="visible: id() != null">
 			<button data-bind="click: $root.showUploadForm, attr: {title:'POSTs video data to /video/' + id() + '/data'}">
 			POST video
 			</button>
