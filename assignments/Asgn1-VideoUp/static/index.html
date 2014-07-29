@@ -1,0 +1,339 @@
+<!DOCTYPE html PUBLIC"-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<!-- 
+Sample single-page client application for assignment 1 of 
+the Coursera/Vanderbilt University Mobile Cloud course.
+
+Copyright 2014 TP Diffenbach
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+
+<meta name="dcterms.rightsHolder" content="TP Diffenbach"/>
+<meta name="dcterms.dateCopyrighted" content="2014"/>
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<title>Video Client 1.0</title>
+<style> 
+button { width: 200px;}
+th { background-color: #AAAAAA; border-radius:4px;}
+th.empty { background-color: white; width:2em;}
+td > button { width: 100%;}
+h3 { font-family: Verdana, Geneva, sans-serif; margin-top:0px;}
+h1 { font-family: Verdana, Geneva, sans-serif; }
+#modal {
+	position:fixed;
+	top: 10%;
+	left:25%;
+	width: 50%;
+	background:white;
+	border-radius:10px;
+	padding:20px;
+}
+
+#overlay {
+	position: fixed; 
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	background: #000;
+	opacity: 0.5;
+	filter: alpha(opacity=50);
+}
+
+/* tag cells with metadata describing what they're part of */
+
+tr td,
+tr input,
+tr select { background-color: #CFF }
+tr .empty {background-color: #FFF}
+
+tr.even td, 
+tr.even input,
+tr.even select {background-color: #FFF}
+tr.even .empty {background-color: #FFF}
+
+tr.updating td.md,
+tr.updating td.md input,
+tr.updating td.md select {background-color: yellow}
+
+ 
+
+</style>
+<script type="text/javascript" src="http://ajax.aspnetcdn.com/ajax/jQuery/jquery-2.1.1.min.js"></script>
+<script type="text/javascript" src="http://ajax.aspnetcdn.com/ajax/knockout/knockout-3.0.0.js"></script>
+<script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/knockout.mapping/2.4.1/knockout.mapping.min.js"></script>
+<script type="text/javascript">
+$( document ).ready( function() {
+
+// copied from http://jsfiddle.net/mbest/n4z8Q/
+ko.bindingHandlers.numeric = {
+    init: function (element) {
+        $(element).on("keydown", function (event) {
+            // Allow: backspace, delete, tab, escape, and enter
+            if (event.keyCode == 46 || event.keyCode == 8 || event.keyCode == 9 || event.keyCode == 27 || event.keyCode == 13 ||
+                // Allow: Ctrl+A
+                (event.keyCode == 65 && event.ctrlKey === true) ||
+                // Allow: . ,
+                (event.keyCode == 188 || event.keyCode == 190 || event.keyCode == 110) ||
+                // Allow: home, end, left, right
+                (event.keyCode >= 35 && event.keyCode <= 39)) {
+                // let it happen, don't do anything
+                return;
+            }
+            else {
+                // Ensure that it is a number and stop the keypress
+                if (event.shiftKey || (event.keyCode < 48 || event.keyCode > 57) && (event.keyCode < 96 || event.keyCode > 105)) {
+                    event.preventDefault();
+                }
+            }
+        });
+    }    
+};
+
+
+// video constructor, only for added videos
+var Video = function() { 
+	return {id: null, 
+			title: null, 
+			duration: null, 
+			location: null, 
+			subject: null, 
+			contentType: "video/mp4", 
+			dataUrl: null,
+			status: ko.observable({ state: "Unknown" }),
+			updating: ko.observable(false)
+			};
+}
+
+// Video to knockout mapped Video, adding the status
+var VideoKOMapping = function(video) { 
+	var ret = ko.mapping.fromJS(video, this);
+	ret.status = ko.observable({ state: "Unknown" });
+	ret.updating = ko.observable(false);
+	return ret;
+}
+
+var mapping = { 
+	create: function(options) {
+		return new VideoKOMapping(options.data);
+	},
+	ignore: ["status", "updating"]
+};
+
+
+// the client-side model
+function ViewModel() {
+	var self = this;
+	
+	self.contentTypes = [
+		"video/avi",
+		"video/mpeg",
+		"video/mp4", 
+		"video/ogg",
+		"video/quicktime",
+		"video/webm",
+		"video/x-matroska",
+		"video/x-ms-wmv",
+		"video/x-flv" 
+	];
+
+	self.videos = ko.mapping.fromJS([], mapping);
+	self.selectedVideo = ko.observable(null);
+	self.uploadFile = ko.observable(null);
+	self.statuses = 
+	
+	self.addVideo = function() {
+		self.videos.push(ko.mapping.fromJS(new Video(), mapping))
+	}
+	
+	self.refreshVideos = function() {
+		$.getJSON("/video", function(data) {
+			var map = {};
+			ko.utils.arrayForEach( self.videos(), function(v) { 
+				map[v.id()] = v.status();
+			});
+			ko.mapping.fromJS(data, self.videos);
+			ko.utils.arrayForEach( self.videos(), function(v) { 
+				var s = map[v.id()]; 
+				if(s) v.status(s);
+			});
+		}) .fail( function(d, textStatus, error) {
+			console.error("getJSON failed, status: " + textStatus + ", error: "+error)
+		});
+	}
+	
+	self.updateVideo = function(video) {
+		video.updating(true);
+		$.ajax({
+			url: "/video",
+			type: "POST",
+			data: ko.mapping.toJSON(video),
+			contentType: "application/json; charset=utf-8",
+			dataType: "json",
+			success: function(data){ 
+				var uploadStatus = video.status();
+				ko.mapping.fromJS(data, video); 
+				video.status(uploadStatus);
+			},
+			failure: function(errMsg) {
+				alert(errMsg);
+			}
+		}).done( function() { 
+				setTimeout(function() {video.updating(false);}, 400)
+			});
+	}
+	
+	self.updateAll = function() {
+		ko.utils.arrayForEach( self.videos(), function(v) {
+			self.updateVideo(v);
+		});
+		// no longer needed, as we update in place
+		//self.refreshVideos();
+	}
+	
+	self.uploadVideo = function(){
+		var formData = new FormData($('#uploadForm')[0]);
+		
+		$.ajax({
+			url: self.selectedVideo().dataUrl(),  //Server script to process data
+			type: 'POST',
+			// Form data
+			data: formData,
+			success: function(status) { 
+				self.selectedVideo().status(status);  
+				self.hideUploadForm();
+			},
+			error: function() {
+				alert("Upload of video failed");
+			},
+			//Options to tell jQuery not to process data or worry about content-type.
+			cache: false,
+			contentType: false,
+			processData: false
+		});
+	}
+	
+	self.showUploadForm = function(video) {
+		self.selectedVideo(video);
+	}
+	
+	self.hideUploadForm = function() {
+		self.selectedVideo(null);
+		self.uploadFile(null);
+	}
+	
+	self.selectedVideoFormattedName = function() {
+		var sv = self.selectedVideo();
+		return sv == null ? null : sv.title() + " (id: " + sv.id() + ")";
+	}
+	
+	self.refreshVideos();
+}
+
+ko.applyBindings(new ViewModel());
+})
+</script>
+
+</head>
+<body>
+<div id="display">
+	<h1>Video Client 1.0</h1>
+	<h2 data-bind="visible: videos().length == 0">No Videos have been uploaded (was the server stopped?)</h2>
+	<div data-bind="visible: videos().length != 0">
+		<h2>List of videos on the server:</h2>
+		<table>
+			<thead><tr>
+				<th>id</th><th>Title</th><th>Duration</th><th>Subject</th><th>Location</th>
+						<th>Content Type</th><th>Update</th><th class="empty"></th>
+				 <th>Video Status</th><th>Data Url</th><th>Upload</th>
+			</tr></thead>
+			<tbody data-bind="foreach: videos">
+			<tr data-bind="css: { 'updating': updating, even: $index() % 2 == 0}">
+				<td class="md" data-bind="text: id" 
+					title="Id of video. In a real app (as opposed to this one, for testing), we'd hide the id from users, to prevent them from relying on it and thus preventing us from changing it."></td>
+				<td class="md"><input data-bind="value: title" title="Title of video"/></td>
+				<td class="md"><input type="number" data-bind="numeric, value: duration", title="Duration only accepts numbers"/></td>
+				<td class="md"><input data-bind="value: subject" title="Subject of video"/></td>
+				<td class="md"><input data-bind="value: location" title="Location of video"/></td>
+				<td class="md"><select data-bind="options: $root.contentTypes, value: contentType" title="Content Type of video"></select></td>
+				<td class="md space-after">
+					<button data-bind="click: $root.updateVideo, 
+						attr: {title:'POSTs metadata for id: ' + id() + ' to /video, replacing this row with returned JSON'}">
+						POST
+					</button>
+				</td>
+				<td class="empty"></td>
+				<td class="d" data-bind="text: status().state" title="Status of uploaded video"></td>
+				<td class="d" data-bind="visible: dataUrl != null">
+					<a target="_blank" data-bind="attr: { href: dataUrl, title: dataUrl}">View video</a>
+				</td>
+				<td class="d" data-bind="visible: id() != null">
+					<button data-bind="click: $root.showUploadForm, attr: {title:'POSTs video data to /video/' + id() + '/data'}">
+					POST video
+					</button>
+				</td>
+			</tr>    
+			</tbody>
+		</table>
+	</div>
+	<div id="main-controls">
+		<button data-bind="click: refreshVideos" title="Replace video list with a fresh copy of all video metadata from the server, by GETting /video">
+		Refresh list (GET)
+		</button>
+		<button data-bind="click: updateAll" title="Send metadata for each row in the list to the server, by POSTing each row in the list to /video">
+		Update all videos (POSTs)
+		</button>
+		<button data-bind="click: addVideo" title="Add a new, empty, row to the list in the browser. No server call is made.">
+		Add a video (client-side)
+		</button> 
+	</div>
+	<div id="textcopy">
+		<p><em>Note:</em> All Video Statuses are initially "Unknown".</p>
+		<p>This is a limitation of the Video Web API, as we can only get the Video Status of a video by uploading it.
+		In this client page, we preserve any <em>known</em> Video Statuses (from uploads) through metadata updates (POSTs) 
+		and list refreshes (GETs). Refreshing the page of course clears all data, as this is a single-page client written 
+		in javascript and HTML.
+		</p>
+		
+		<p>This client was written to test and exercise assignment 1 of the Coursera/Vanderbilt University Online Course 
+		<a href="https://class.coursera.org/mobilecloud-001/">"Programming Cloud Services for Android Handheld Systems"</a>.
+		</p> 
+		
+		<p>This HMTL and javascript client program is copyright &copy; 2014 TP Diffenbach, and licensed under the Apache License, 
+		Version 2.0: <a href="http://www.apache.org/licenses/LICENSE-2.0">http://www.apache.org/licenses/LICENSE-2.0</a>. Copies 
+		(and possibly newer versions) of this program can be obtained from, and bugs reported to, <a href="https://github.com/tpdi/mobilecloud14">https://github.com/tpdi/mobilecloud14</a>.
+		</p>
+		
+		<p>Good luck, and I hope this helps you in the course.</p>
+	</div>
+</div>
+<div id="overlay" class="overlay" data-bind="visible: selectedVideo() != null"></div>
+<div id="modal" class="modal" data-bind="visible: selectedVideo() != null">
+	<h3>Select a file to upload for 
+		<span data-bind="text: selectedVideoFormattedName()"></span>
+	</h3>
+	
+	<form id="uploadForm" class="uploadForm" enctype="multipart/form-data">
+		<input name="data" type="file" data-bind="value: uploadFile" title="Select a video from this computer to upload."/>
+	</form>
+	<button data-bind="click: uploadVideo, enable: uploadFile() != null, 
+		attr: {title: 'Upload the video'}">
+		Upload
+	</button>
+	<button data-bind="click: hideUploadForm, enable:true", title="Cancel upload and clear file name">Cancel</button>
+</div>
+</body>
+</html>
