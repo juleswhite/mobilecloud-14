@@ -26,9 +26,13 @@ limitations under the License.
 <title>Video Client 1.0</title>
 <style> 
 button { width: 200px;}
-th { background-color: #AAAAAA; border-radius:4px;}
-th.empty { background-color: white; width:2em;}
 td > button { width: 100%;}
+
+th {border-radius:4px;}
+#video-table th { background-color: #AAA;}
+#error-table th { background-color: red;}
+th.empty { background-color: white; width:2em;}
+
 h2, h3 { font-family: Verdana, Geneva, sans-serif; margin-top:0px;}
 h1 { font-family: Verdana, Geneva, sans-serif; }
 
@@ -72,14 +76,27 @@ tr.updating td.md,
 tr.updating td.md input,
 tr.updating td.md select {background-color: yellow;}
 
+tr.error td.md,
+tr.error td.md input,
+tr.error td.md select {background-color: red;}
+
 tr .empty {background-color: #FFF}
 
+#error-table tr, #error-table tr td {background-color: #F00}
+#error-table tr.even, #error-table tr.even td {background-color: #F93}
 
 span.borderRadio { padding-left: 3em;}
 ul.borderRadio  {display: inline; margin: 0; padding: 0; list-style-type: none;}
-li.borderRadio { display:inline;}
+li.borderRadio { display: inline;}
 
+#error-panel { margin: 3em 0 3em 0; border: 3px solid #F00;}
+#error-scroll { margin: 0.5em 0 0 0; height: 10em; overflow: auto;}
+#error-table {width: 100%}
 
+#timeout { padding-left: 2em; padding-right: 2em;}
+#timeout input { width: 4em;}
+
+#error-panel-label {display: inline; padding: 2em;}
 </style>
 <script type="text/javascript" src="http://ajax.aspnetcdn.com/ajax/jQuery/jquery-2.1.1.min.js"></script>
 <script type="text/javascript" src="http://ajax.aspnetcdn.com/ajax/knockout/knockout-3.0.0.js"></script>
@@ -117,10 +134,6 @@ ko.bindingHandlers.numeric = {
 function ViewModel() {
 	var self = this;
 	
-	self.timeoutMs = 300;
-	self.notyetuploadedStatus = { state:"Not uploaded"};
-	self.borderStyleCss = ko.observable("boxed");
-	
 	// video constructor, only for added videos.
 	self.Video = function() { 
 		return {
@@ -140,6 +153,7 @@ function ViewModel() {
 		var ret = ko.mapping.fromJS(video, this);
 		ret.status = ko.observable({ state: "Unknown" });
 		ret.updating = ko.observable(true);
+		ret.error = ko.observable(null);
 		return ret;
 	};
 
@@ -148,8 +162,20 @@ function ViewModel() {
 		create: function(options) {
 			return new self.VideoKOMapping(options.data);
 		},
-		ignore: ["status", "updating"]
+		ignore: ["status", "updating", "error"]
 	};
+	
+	self.Error = function(id, method, url, params, response, error, additional) {
+		return {
+			id: id,
+			method: method,
+			url: url,
+			params: params,
+			response: response,
+			error: error,
+			additional: additional
+		};
+	}
 	
 	self.contentTypes = [
 		"video/avi",
@@ -163,9 +189,15 @@ function ViewModel() {
 		"video/x-flv" 
 	];
 
+	self.timeoutMs = 300;
+	self.metadataUrl = "/video";
+	self.notyetuploadedStatus = { state:"Not uploaded"};
+	self.borderStyleCss = ko.observable("boxed");
 	self.videos = ko.mapping.fromJS([], self.mapping);
 	self.selectedVideo = ko.observable(null);
 	self.uploadFile = ko.observable(null);
+	self.errors = ko.observableArray([]);
+	self.ajaxTimeoutMs = ko.observable(3000);
 	
 	self.addVideo = function() {
 		self.videos.push(ko.mapping.fromJS(new self.Video(), self.mapping))
@@ -178,15 +210,22 @@ function ViewModel() {
 			v.updating(true);
 		});
 		
-		$.getJSON("/video", function(data) {
-			ko.mapping.fromJS(data, self.videos);
+		$.ajax({
+			url: self.metadataUrl,
+			type: "GET",
+			timeout: self.ajaxTimeoutMs()
+		}).fail( function(response, textStatus, error) {
+			self.addError("ALL", "GET", self.metadataUrl, "(none)", response.responseText, textStatus, error);
+			ko.utils.arrayForEach(self.videos(), function(v) { 
+				v.updating(false);
+				v.error(true);
+			});
+		}).done( function(response) { 
+			ko.mapping.fromJS(response, self.videos);
 			ko.utils.arrayForEach(self.videos(), function(v) { 
 				var s = map[v.id()]; 
 				if(s) v.status(s);
 			});
-		}).fail( function(d, textStatus, error) {
-			console.error("getJSON failed, status: " + textStatus + ", error: "+error)
-		}).done( function() { 
 			setTimeout(function() { 
 				ko.utils.arrayForEach(self.videos(), function(v) {
 					v.updating(false);
@@ -197,22 +236,24 @@ function ViewModel() {
 	
 	self.updateVideo = function(video) {
 		video.updating(true);
+		var id = video.id();
+		var type = "POST";
+		var data = ko.mapping.toJSON(video)
 		$.ajax({
-			url: "/video",
-			type: "POST",
-			data: ko.mapping.toJSON(video),
+			url: self.metadataUrl,
+			type: type,
+			data: data,
 			contentType: "application/json; charset=utf-8",
 			dataType: "json",
-			success: function(data){ 
-				var uploadStatus = video.status();
-				var id = video.id();
-				ko.mapping.fromJS(data, video); 
-				video.status(id == null ?  self.notyetuploadedStatus : uploadStatus);
-			},
-			failure: function(errMsg) {
-				alert(errMsg);
-			}
-		}).done( function() { 
+			timeout: self.ajaxTimeoutMs()
+		}).fail( function(response, textStatus, error) {
+			self.addError(id, type, self.metadataUrl, data, response.responseText, textStatus, error);
+			video.error(true);
+		}).done( function(response) { 
+			var uploadStatus = video.status();
+			ko.mapping.fromJS(response, video); 
+			video.status(id == null ?  self.notyetuploadedStatus : uploadStatus);
+			video.error(false);
 			setTimeout(function() {
 				video.updating(false);
 			}, self.timeoutMs);
@@ -227,25 +268,29 @@ function ViewModel() {
 		//self.refreshVideos();
 	};
 	
-	self.uploadVideo = function(){
+	self.uploadVideo = function() {
 		var formData = new FormData($('#uploadForm')[0]);
-		
+		var video = self.selectedVideo();			
+		var id = video.id();
+		var url = video.dataUrl();
+		var type ="POST";
+		var filename = self.uploadFile();
+		self.hideUploadForm(); // hide early, so we can see the status update more clearly
 		$.ajax({
-			url: self.selectedVideo().dataUrl(),  //Server script to process data
-			type: 'POST',
+			url: url,  //Server script to process data
+			type: type,
 			// Form data
 			data: formData,
-			success: function(status) { 
-				self.selectedVideo().status(status);  
-				self.hideUploadForm();
-			},
-			error: function() {
-				alert("Upload of video failed");
-			},
 			//Options to tell jQuery not to process data or worry about content-type.
 			cache: false,
 			contentType: false,
-			processData: false
+			processData: false,
+			timeout: self.ajaxTimeoutMs()
+		}).fail( function(response, textStatus, error) {
+			self.addError(id, type, url, filename, response.responseText, textStatus, error);
+			video.error(true);
+		}).done( function(status) { 
+			video.status(status);  
 		});
 	};
 	
@@ -263,6 +308,16 @@ function ViewModel() {
 		return sv == null ? null : sv.title() + " (id: " + sv.id() + ")";
 	};
 	
+	self.addError = function(id, method, url, params, response, error, additional) {
+		self.errors.push( new self.Error(id, method, url, params, response, error, additional) );
+		$('#error-scroll').scrollTop($('#error-scroll')[0].scrollHeight);
+		//$('#error-scroll').scrollTop($('#error-scroll').height());
+	};
+	
+	self.clearErrors = function() {
+		self.errors([]);
+	};
+
 	self.refreshVideos();
 }
 
@@ -275,16 +330,17 @@ ko.applyBindings(new ViewModel());
 <div id="display">
 	<h1>Video Client 1.0</h1>
 	<h2 data-bind="visible: videos().length == 0">No Videos have been uploaded (was the server stopped?)</h2>
+	
 	<div data-bind="visible: videos().length != 0">
 		<h2>List of videos on the server:</h2>
-		<table data-bind="css: borderStyleCss">
+		<table id="video-table" data-bind="css: borderStyleCss">
 			<thead><tr>
 				<th>id</th><th>Title</th><th>Duration</th><th>Subject</th><th>Location</th>
 						<th>Content Type</th><th>Update</th><th class="empty"></th>
 				 <th>Video Status</th><th>Data Url</th><th>Upload</th>
 			</tr></thead>
 			<tbody data-bind="foreach: videos">
-			<tr data-bind="css: { 'updating': updating, even: $index() % 2 == 0}">
+			<tr data-bind="css: { 'updating': updating, 'error': error, even: $index() % 2 == 0}">
 				<td class="md" data-bind="text: id" 
 					title="Id of video. In a real app (as opposed to this one, for testing), we'd hide the id from users, to prevent them from relying on it and thus preventing us from changing it."></td>
 				<td class="md"><input data-bind="value: title" title="Title of video"/></td>
@@ -315,17 +371,21 @@ ko.applyBindings(new ViewModel());
 			</tbody>
 		</table>
 	</div>
+	
 	<div id="main-controls">
-		<button data-bind="click: refreshVideos" title="Replace video list with a fresh copy of all video metadata from the server, by GETting /video">
+		<button data-bind="click: refreshVideos" title="Replace video list with a fresh copy of 
+		all video metadata from the server, by GETting /video">
 		Refresh list (GET)
 		</button>
-		<button data-bind="click: updateAll" title="Send metadata for each row in the list to the server, by POSTing each row in the list to /video">
+		<button data-bind="click: updateAll" title="Send metadata for each row in the list to 
+		the server, by POSTing each row in the list to /video">
 		Update all videos (POSTs)
 		</button>
-		<button data-bind="click: addVideo" title="Add a new, empty, row to the list in the browser. No server call is made.">
+		<button data-bind="click: addVideo" title="Add a new, empty, row to 
+		the list in the browser. No server call is made.">
 		Add a video (client-side)
 		</button> 
-		
+		<span id="timeout">Ajax timeout (ms) <input type="number" data-bind="numeric, value: ajaxTimeoutMs"/></span>
 		<span class="borderRadio">Style:
 			<ul class="borderRadio">
 			<li class="borderRadio"><input type="radio" name="borderstyleGroup" value="flat" data-bind="checked: borderStyleCss" /> Flat</li>
@@ -334,6 +394,33 @@ ko.applyBindings(new ViewModel());
 			</ul>
 		</span>
 	</div>
+	
+	<div id="error-panel" data-bind="visible: errors().length != 0">
+		<h2 id="error-panel-label">Errors</h2>
+		<button data-bind="click: clearErrors, enable: true" title="Clear this error list and hide this error panel.">
+		Clear errors 
+		</button> 
+		<div id="error-scroll">
+			<table id="error-table" data-bind="css: borderStyleCss">
+				<thead><tr>
+					<th>Video id</th><th>Method</th><th>Url</th><th>Data Sent</th><th>Response</th>
+							<th>Error</th><th>Additional</th>
+				</tr></thead>
+				<tbody data-bind="foreach: errors">
+				<tr data-bind="css: { even: $index() % 2 == 0}">
+					<td data-bind="text: id"></td>
+					<td data-bind="text: method"></td>
+					<td data-bind="text: url"></td>
+					<td data-bind="text: params"></td>
+					<td data-bind="text: response"></td>
+					<td data-bind="text: error"></td>
+					<td data-bind="text: additional"></td>
+				</tr>
+				</tbody>
+			</table>
+		</div>
+	</div>
+	
 	<div id="textcopy">
 	
 		<p>This client has been tested on Firefox 31, Chrome 35, Safari 5.1.7, and Internet Explorer 11.</p>
