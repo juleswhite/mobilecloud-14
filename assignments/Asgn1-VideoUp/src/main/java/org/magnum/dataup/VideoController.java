@@ -17,10 +17,12 @@
  */
 package org.magnum.dataup;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.magnum.dataup.model.Video;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -30,16 +32,24 @@ import org.springframework.web.bind.annotation.ResponseBody;
 @Controller
 public class VideoController {
 
-	@Autowired
-	private VideoSvc videoSvc;
+	private List<Video> videos = new ArrayList<>();
+	
+	private AtomicLong id = new AtomicLong(1);
 	
 	@RequestMapping(value = VideoSvcApi.VIDEO_SVC_PATH, method = RequestMethod.GET)
 	public @ResponseBody Collection<Video> getVideoList() {
-		return videoSvc.getVideoList();
+		return videos;
 	}
 	
 	@RequestMapping(value = VideoSvcApi.VIDEO_SVC_PATH, method = RequestMethod.POST)
 	public @ResponseBody Video addVideo(@RequestBody Video v) {
-		return videoSvc.addVideo(v);
+		if(v != null) {
+			v.setId(id.getAndIncrement());
+			v.setDataUrl("url");
+			if(videos.add(v)) {
+				return v;
+			}
+		}
+		return v;
 	}
 }
