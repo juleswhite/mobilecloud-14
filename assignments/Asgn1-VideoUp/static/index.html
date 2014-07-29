@@ -30,7 +30,7 @@ button { width: 200px;}
 th { background-color: #AAAAAA; border-radius:4px;}
 th.empty { background-color: white; width:2em;}
 td > button { width: 100%;}
-h3 { font-family: Verdana, Geneva, sans-serif; margin-top:0px;}
+h2, h3 { font-family: Verdana, Geneva, sans-serif; margin-top:0px;}
 h1 { font-family: Verdana, Geneva, sans-serif; }
 #modal {
 	position:fixed;
@@ -153,7 +153,6 @@ function ViewModel() {
 	self.videos = ko.mapping.fromJS([], mapping);
 	self.selectedVideo = ko.observable(null);
 	self.uploadFile = ko.observable(null);
-	self.statuses = 
 	
 	self.addVideo = function() {
 		self.videos.push(ko.mapping.fromJS(new Video(), mapping))
