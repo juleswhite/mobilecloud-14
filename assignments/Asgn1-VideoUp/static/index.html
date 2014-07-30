@@ -25,7 +25,7 @@ limitations under the License.
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <title>Video Client 1.0</title>
 <style> 
-button { width: 200px;}
+button { width: 200px; margin: .2em 0 .2em;}
 td > button { width: 100%;}
 
 th {border-radius:4px;}
@@ -106,7 +106,10 @@ li.borderRadio { display: inline;}
 
 #error-panel-label {display: inline; padding: 2em;}
 
-#main-controls {margin-top: 1em;}
+#main-controls, #video-panel {margin-top: 1em;}
+
+#hide-video {display: block;}
+
 </style>
 <script type="text/javascript" src="http://ajax.aspnetcdn.com/ajax/jQuery/jquery-2.1.1.min.js"></script>
 <script type="text/javascript" src="http://ajax.aspnetcdn.com/ajax/knockout/knockout-3.0.0.js"></script>
@@ -148,6 +151,7 @@ function ViewModel() {
 	self.OK = 0;
 	self.UPDATING = 1;
 	self.ERROR = 2;
+	self.dummyVideoUrl = "dummy"; //hack to stop videos from playing when hidden
 	
 	// video constructor, only for added videos.
 	self.Video = function() { 
@@ -213,6 +217,7 @@ function ViewModel() {
 	self.uploadFile = ko.observable(null);
 	self.errors = ko.observableArray([]);
 	self.ajaxTimeoutMs = ko.observable(3000);
+	self.playingVideo = ko.observable(self.dummyVideoUrl);
 	
 	self.addVideo = function() {
 		self.videos.push(ko.mapping.fromJS(new self.Video(), self.mapping))
@@ -344,6 +349,16 @@ function ViewModel() {
 		};
 	}
 
+	self.playVideo = function(v, e) {
+		if (! e.ctrlKey){
+			self.playingVideo(v.dataUrl());
+		} else return true;
+	}
+	
+	self.hideVideo = function() {
+		self.playingVideo(self.dummyVideoUrl); 
+	}
+	
 	self.refreshVideos();
 }
 
@@ -384,7 +399,9 @@ ko.applyBindings(new ViewModel());
 				<!-- ko if: id() != null -->
 					<td class="d" data-bind="text: status().state" title="Status of uploaded video"></td>
 					<td class="d">
-						<a data-bind="visible: status() != $root.notyetuploadedStatus, attr: { href: dataUrl, title: dataUrl}" 
+						<a data-bind="visible: status() != $root.notyetuploadedStatus, 
+						attr: { href: dataUrl, title: dataUrl() + '\nControl/Cmd click to play in new window'},
+						click: $root.playVideo" 
 						target="_blank">View video</a>
 					</td>
 					<td class="d">
@@ -444,10 +461,20 @@ ko.applyBindings(new ViewModel());
 		</div>
 	</div>
 	
+	<div id="video-panel" data-bind="visible: playingVideo() != dummyVideoUrl">
+		<button id="hide-video" data-bind="click: hideVideo" title="End and hide the video (video is discarded)">
+		End video
+		</button> 
+		<video data-bind="attr: { src: playingVideo() }" controls="" autoplay=""></video>
+	</div>
+	
 	<div id="textcopy">
 	
 		<p>This client has been tested on Firefox 31, Chrome 35, Safari 5.1.7, and Internet Explorer 11.</p>
-		<p>No issues have been found except with Internet Explorer 11, which does not disable the "Upload" button after its first use.</p>
+		<ul> 
+			<li>Internet Explorer 11 does not disable the "Upload" button after its first use.</li>
+			<li>Safari 5.1.7 does not support embedded HTML5 video.</li>
+		</ul>
 		
 		<p><em>Note:</em> All Video Statuses are initially "Unknown".</p>
 		
