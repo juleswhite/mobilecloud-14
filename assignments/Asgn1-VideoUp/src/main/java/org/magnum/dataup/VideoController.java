@@ -17,12 +17,15 @@
  */
 package org.magnum.dataup;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import org.magnum.dataup.model.Video;
 import org.magnum.dataup.model.VideoStatus;
@@ -32,10 +35,12 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
+import org.springframework.web.multipart.MultipartFile;
 
 @Controller
 public class VideoController {
@@ -62,27 +67,51 @@ public class VideoController {
 	}
 
 	@RequestMapping(value = VideoSvcApi.VIDEO_DATA_PATH, method = RequestMethod.GET)
-	public @ResponseBody Video getData(@PathVariable("id") long videoId) {
-		for (int i = 0; i < videos.size(); i++) {
-			if (Long.compare(videos.get(i).getId(), videoId) == 0) {
-				return videos.get(i);
+	public void getData(@PathVariable("id") long videoId, HttpServletResponse response) {
+		try {
+			Video video = null;
+			for (int i = 0; i < videos.size(); i++) {
+				if (Long.compare(videos.get(i).getId(), videoId) == 0) {
+					video = videos.get(i);
+					if (!VideoFileManager.get().hasVideoData(video)) {
+						throw new ResourceNotFoundException();
+					}
+
+					ByteArrayOutputStream out = new ByteArrayOutputStream();
+					VideoFileManager.get().copyVideoData(video, out);
+					response.getOutputStream().write(out.toByteArray());
+				}
 			}
-		}
-		throw new ResourceNotFoundException();
+			if(video == null) {
+				throw new ResourceNotFoundException();
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		} 
 	}
 	
 	@RequestMapping(value = VideoSvcApi.VIDEO_DATA_PATH, method = RequestMethod.POST)
-	public @ResponseBody VideoStatus setVideoData(@PathVariable("id") long videoId) {
-		Video video = addVideo(new Video());
+	public @ResponseBody VideoStatus setVideoData(@PathVariable("id") long videoId, @RequestPart(VideoSvcApi.DATA_PARAMETER) MultipartFile videoData, 
+			HttpServletResponse response) {
+		Video video = null;
+		for (int i = 0; i < videos.size(); i++) {
+			if (Long.compare(videos.get(i).getId(), videoId) == 0) {
+				video = videos.get(i);
+			}
+		}
+		if(video == null) {
+			throw new ResourceNotFoundException();
+		}
+		
+		try {
+			VideoFileManager.get().saveVideoData(video, videoData.getInputStream());
+		} catch (IOException e) {
+			throw new RuntimeException("Cannot save video data");
+		}
+		
 		return new VideoStatus(VideoState.READY);
 	}
 
-	@ResponseStatus(value = org.springframework.http.HttpStatus.NOT_FOUND)
-	public static final class ResourceNotFoundException extends
-			RuntimeException {
-		private static final long serialVersionUID = -8916205905961324734L;
-	}
-	
 	private String getDataUrl(long videoId){
         String url = getUrlBaseForLocalServer() + "/video/" + videoId + "/data";
         return url;
@@ -97,4 +126,11 @@ public class VideoController {
 						+ request.getServerPort() : "");
 		return base;
 	}
+	
+	@ResponseStatus(value = org.springframework.http.HttpStatus.NOT_FOUND)
+	public static final class ResourceNotFoundException extends
+			RuntimeException {
+		private static final long serialVersionUID = -8916205905961324734L;
+	}
+	
 }
