@@ -151,7 +151,6 @@ function ViewModel() {
 	self.OK = 0;
 	self.UPDATING = 1;
 	self.ERROR = 2;
-	self.dummyVideoUrl = "dummy"; //hack to stop videos from playing when hidden
 	
 	// video constructor, only for added videos.
 	self.Video = function() { 
@@ -217,7 +216,8 @@ function ViewModel() {
 	self.uploadFile = ko.observable(null);
 	self.errors = ko.observableArray([]);
 	self.ajaxTimeoutMs = ko.observable(3000);
-	self.playingVideo = ko.observable(self.dummyVideoUrl);
+	self.playingVideo = ko.observable(null);
+	self.showingVideo = ko.observable(false);
 	
 	self.addVideo = function() {
 		self.videos.push(ko.mapping.fromJS(new self.Video(), self.mapping))
@@ -351,12 +351,40 @@ function ViewModel() {
 
 	self.playVideo = function(v, e) {
 		if (! e.ctrlKey){
-			self.playingVideo(v.dataUrl());
+			if (self.playingVideo() != v.dataUrl()) self.playingVideo(v.dataUrl()); // play changed url
+			else if (! self.showingVideo()) document.getElementById('video-player').play(); //play paused video
+			else document.getElementById('video-player').load(); // if user clicks same url while video is showing, replay from start
+			
+			self.showingVideo(true);
 		} else return true;
 	}
 	
+	// special version for IE 11, which can't deal with load() or changed urls
+	if (navigator.appVersion.indexOf("Trident/7.0") != -1) {
+		self.playVideo = function(v, e) {			
+			if (! e.ctrlKey){
+				if (self.playingVideo() != v.dataUrl() || self.showingVideo()) {
+					if (self.playingVideo() == null) { // first time
+						self.playingVideo(v.dataUrl());
+					} else { // subsequent times, we have to recycle the button,  
+							  // and that will break the knockout binding 
+						var vp = document.getElementById('video-player');
+						vp.pause();
+						self.playingVideo(v.dataUrl());
+						var pn = vp.parentNode;
+						pn.innerHTML = pn.innerHTML;
+						document.getElementById('video-player').src = v.dataUrl();
+					}
+				} else document.getElementById('video-player').play(); //play paused video
+				
+				self.showingVideo(true);
+			} else return true;
+		}
+	}
+	
 	self.hideVideo = function() {
-		self.playingVideo(self.dummyVideoUrl); 
+		self.showingVideo(false); 
+		document.getElementById('video-player').pause();
 	}
 	
 	self.refreshVideos();
@@ -400,9 +428,10 @@ ko.applyBindings(new ViewModel());
 					<td class="d" data-bind="text: status().state" title="Status of uploaded video"></td>
 					<td class="d">
 						<a data-bind="visible: status() != $root.notyetuploadedStatus, 
-						attr: { href: dataUrl, title: dataUrl() + '\nControl/Cmd click to play in new window'},
+						attr: { href: dataUrl, title: dataUrl() 
+						+ '\nClick to play or unpause video\nClicking while a video is showing restarts it\nControl/Cmd click to play in new window'},
 						click: $root.playVideo" 
-						target="_blank">View video</a>
+						target="_blank">Play video</a>
 					</td>
 					<td class="d">
 						<button data-bind="click: $root.showUploadForm, attr: {title:'POSTs video data to /video/' + id() + '/data'}">
@@ -461,11 +490,13 @@ ko.applyBindings(new ViewModel());
 		</div>
 	</div>
 	
-	<div id="video-panel" data-bind="visible: playingVideo() != dummyVideoUrl">
-		<button id="hide-video" data-bind="click: hideVideo" title="End and hide the video (video is discarded)">
-		End video
+	<div id="video-panel" data-bind="visible: showingVideo()">
+		<button id="hide-video" data-bind="click: hideVideo" title="Pause and hide the video">
+		Pause and hide video
 		</button> 
-		<video data-bind="attr: { src: playingVideo() }" controls="" autoplay=""></video>
+		<div id="extra-div-because-ie-is-broken"> <!-- don't breaking binding of button when we recycle the video -->
+			<video id="video-player" data-bind="attr: { src: playingVideo() }" controls="" autoplay=""></video>
+		</div>
 	</div>
 	
 	<div id="textcopy">
