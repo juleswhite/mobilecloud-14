@@ -48,9 +48,3 @@ which automatically provides all of the functions describe above for our reposit
 
 
 
-## Security Considerations
-
-/health
-/metrics
-
-No security on video upload
