@@ -1,0 +1,59 @@
+buildscript {
+	ext {
+		springBootVersion = '1.0.2.RELEASE'
+	}
+    repositories {
+        maven { url "http://repo.spring.io/libs-snapshot" }
+        mavenLocal()
+    }
+    dependencies {
+        classpath("org.springframework.boot:spring-boot-gradle-plugin:1.0.2.RELEASE")
+    }
+}
+
+apply plugin: 'java'
+apply plugin: 'eclipse'
+apply plugin: 'idea'
+apply plugin: 'spring-boot'
+apply plugin: 'war'
+
+sourceCompatibility = 1.7
+targetCompatibility = 1.7
+
+
+war {
+    baseName = 'gs-convert-jar-to-war'
+    version =  '0.1.0'
+}
+
+repositories {
+    mavenCentral()
+    maven { url "http://repo.spring.io/libs-snapshot" }
+    maven { url "http://maven.springframework.org/milestone" }
+}
+
+dependencies {
+
+    compile("org.springframework.boot:spring-boot-starter-web:${springBootVersion}")
+    
+    compile("org.springframework.boot:spring-boot-starter-tomcat:${springBootVersion}")
+
+    compile("org.springframework.boot:spring-boot-starter-actuator:${springBootVersion}")
+    compile("org.springframework.boot:spring-boot-starter-aop:${springBootVersion}")
+    compile("org.springframework.boot:spring-boot-starter-test:${springBootVersion}")
+    compile("org.springframework.boot:spring-boot-starter-data-jpa:${springBootVersion}")
+    compile("org.springframework.data:spring-data-rest-webmvc")
+    
+    compile("org.hsqldb:hsqldb")
+    
+    compile("org.apache.httpcomponents:httpclient:4.3.4")
+    compile("com.google.guava:guava:17.0")
+    compile("com.squareup.retrofit:retrofit:1.6.0")
+    compile("commons-io:commons-io:2.4")
+    
+    testCompile("junit:junit")
+}
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '1.11'
+}
