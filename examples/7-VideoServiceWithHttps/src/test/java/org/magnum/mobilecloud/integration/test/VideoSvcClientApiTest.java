@@ -37,7 +37,7 @@ import retrofit.client.ApacheClient;
  */
 public class VideoSvcClientApiTest {
 
-	private final String TEST_URL = "http://localhost:8080";
+	private final String TEST_URL = "https://localhost:8443";
 
 	private VideoSvcApi videoService = new RestAdapter.Builder()
 			.setClient(new ApacheClient(UnsafeHttpsClient.createUnsafeClient()))
