@@ -19,6 +19,10 @@ package org.magnum.dataup;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -33,6 +37,7 @@ import org.magnum.dataup.model.VideoStatus.VideoState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -59,47 +64,58 @@ public class VideoController {
 	
 	@RequestMapping(value="/video", method=RequestMethod.GET)
 	public @ResponseBody Collection<? extends Video> getVideos() {
-		logger.debug("Retrieving videos");
+		logger.debug("Retrieving all videos");
 		return videos.values();
 	}
 	
 	@RequestMapping(value="/video", method=RequestMethod.POST)
-	public @ResponseBody Video addVideo(@RequestBody Video v){
+	public @ResponseBody Video addVideo(@RequestBody Video video){
 		long id = idGenerator.incrementAndGet();
 		String dataUrl = getDataUrl(id);
-		if (v.getId() == 0){
-			v.setId(id);
+		if (video.getId() == 0){
+			video.setId(id);
 		}
-		v.setDataUrl(dataUrl);
-		videos.put(v.getId(), v);
+		video.setDataUrl(dataUrl);
+		videos.put(video.getId(), video);
 		logger.debug("Successfully added meta data for video, id: {}", id);
-		return v;
+		return video;
 	}
 	
 	@RequestMapping(value="/video/{id}/data", method=RequestMethod.POST)
-	public @ResponseBody VideoState uploadVideo(
-			@RequestParam("id") Long id,
-			@RequestParam("data") MultipartFile videoData,
-			HttpServletResponse response){
-		logger.debug("Starting to upload video data");
+	public @ResponseBody VideoStatus uploadVideo (
+			@RequestParam("data") MultipartFile data,
+			@PathVariable("id") Long id,
+			HttpServletResponse response) throws IOException{
 		if (!videos.containsKey(id)){
 			response.setStatus(404);
-			return null;
+		}else{
+			try(InputStream in = data.getInputStream()){
+				logger.debug("Starting to upload data for video id {}", id);
+				Path destination = Paths.get("/video", id.toString(), "data");
+				if (!Files.exists(destination)){
+					Files.createDirectories(destination);
+				}
+				Files.copy(in, destination, StandardCopyOption.REPLACE_EXISTING);
+				logger.debug("Succsessfully uploaded data for video id {}", id);
+			}
 		}
-		try(InputStream in = videoData.getInputStream()){
-			//handle the input stream
-			
-		} catch (IOException e) {
-			logger.error("Failed to upload a file to the server, due to:", e);
-			response.setStatus(404);
-		}
-		return VideoState.READY;
+		return new VideoStatus(VideoState.READY);
 	}
 	
 	
 	@RequestMapping(value="/video/{id}/data", method=RequestMethod.GET)
-	public void downloadVideo(){
-		logger.debug("Downloading video");
+	public void downloadVideo(
+			@PathVariable("id") Long id,
+			HttpServletResponse response) throws IOException{
+		Path videoDataPath = Paths.get("/video", id.toString(), "data");
+		boolean hasData = Files.exists(videoDataPath);
+		if (!hasData){
+			logger.debug("No data found for video id {}", id);
+			response.setStatus(404);
+			return;
+		}
+		logger.debug("Downloading data for video id {}", id);
+		Files.copy(videoDataPath, response.getOutputStream());
 	}
 	
     private String getDataUrl(long videoId){
