@@ -108,7 +108,7 @@ public class AutoGrading {
 		}
 
 		HandinUtil.generateHandinPackage("Asgn1", new File("./"),
-				InternalAutoGradingTest.class);
+				AutoGradingTest.class);
 	}
 
 }
