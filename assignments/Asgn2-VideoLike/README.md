@@ -33,7 +33,8 @@ Please read the instructions carefully.
 To run the application:
 
 1. Right-click on the Application class in the assignment project->Run As->Java Application (the 
-   application will try to start and fail with an error message)
+   application may try to start and fail with an error message - this is OK). If the application
+   successfully starts, stop the application before proceeding to the next step.
 2. (Menu Bar) Run->Run Configurations
 3. Under Java Applications, select your run configuration for this app's Application class that
    was just created in step 1 (if you select the run configuration, it should list the assignment
