@@ -1,12 +1,5 @@
 # Assignment 2 Covering Weeks 3-6
 
-# This assignment is in Beta
-
-The assignment has not been officially released. If you would like to get a head
-start on the assignment, you are welcome to do so. However, the final assignment
-may have changes or other bug fixes. If you run into any bugs, please post them
-in the assignment 2 forum.
-
 ## Overview
 
 This assignment will build on the ideas in the original video service to add OAuth 2.0
