@@ -239,7 +239,7 @@ official grade.
 
 - The examples in GitHub will be helpful on this assignment
 - A valid solution is going to have at least one class annotated with @Controller
-- There will probably need to be at least 4 different methods annotated with @RequestMapping to
+- There will probably need to be several different methods annotated with @RequestMapping to
   implement the HTTP API described
 - It is unlikely that you will be able to use Spring Data Rest to complete the assignment due to
   differences in the responses provided by Spring Data Rest when adding new videos, etc.
@@ -252,7 +252,8 @@ official grade.
         public MyObject doSomething(
                    @PathVariable("id") String id, 
                    Principal p) {
-                   
+         
+         String username = p.getName(); 
          // Maybe you want to add this users name to 
          // the list of people who like a video
             ....       
