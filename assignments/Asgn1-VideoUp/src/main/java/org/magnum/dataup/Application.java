@@ -50,7 +50,7 @@ public class Application {
 	// This configuration element adds the ability to accept multipart
 	// requests to the web container.
 	@Bean
-    public MultipartConfigElement multipartConfigElement() {
+    public MultipartConfigElement  multipartConfigElement() {
 		// Setup the application container to be accept multipart requests
 		final MultiPartConfigFactory factory = new MultiPartConfigFactory();
 		// Place upper bounds on the size of the requests to ensure that
