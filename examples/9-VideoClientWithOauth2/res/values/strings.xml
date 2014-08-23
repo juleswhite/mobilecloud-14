@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">VideoClient</string>
+    <string name="action_settings">Settings</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="userName">Username</string>
+    <string name="password">Password</string>
+    <string name="login">Login</string>
+    <string name="server">Server IP or Hostname</string>
+    <string name="localhost">https://10.0.2.2:8443</string>
+    <string name="title_activity_video_list">VideoListActivity</string>
+
+</resources>
