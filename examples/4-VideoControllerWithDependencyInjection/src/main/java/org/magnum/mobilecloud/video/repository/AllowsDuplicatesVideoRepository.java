@@ -21,6 +21,7 @@ import org.magnum.mobilecloud.video.controller.Video;
  * @author jules
  *
  */
+@SuppressWarnings("unused")
 public class AllowsDuplicatesVideoRepository implements VideoRepository {
 
 	// Lists allow duplicate objects that are .equals() to
