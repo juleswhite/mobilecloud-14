@@ -10,7 +10,10 @@ package, Run As->Java Application and then stop the application after it launche
 4. Open the Arguments tab
 5. In VM Arguments, provide the following information for your Amazon AWS account:
 
-   -Damazon.aws.secretkey=<your_secret_key> -Damazon.aws.accesskey=<your_access_key>
+   -Damazon.aws.secretkey=your_secret_key -Damazon.aws.accesskey=your_access_key
+
+   You will need to obtain the secret key and access key from Amazon by signing up
+   for an AWS account.
 
 To stop the application:
 
