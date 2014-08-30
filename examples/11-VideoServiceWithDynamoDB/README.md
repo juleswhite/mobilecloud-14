@@ -5,9 +5,10 @@ To run the application:
 1. Right-click on the Application class in the org.magnum.mobilecloud.video
 package, Run As->Java Application and then stop the application after it launches
 (this is to have Eclipse create a run configuraiton for you).
-2. Under Java Applications, select your run configuration for this app
-3. Open the Arguments tab
-4. In VM Arguments, provide the following information for your Amazon AWS account:
+2. Run->Run Configurations
+3. Under Java Applications, select your run configuration for this app
+4. Open the Arguments tab
+5. In VM Arguments, provide the following information for your Amazon AWS account:
 
    -Damazon.aws.secretkey=<your_secret_key> -Damazon.aws.accesskey=<your_access_key>
 
