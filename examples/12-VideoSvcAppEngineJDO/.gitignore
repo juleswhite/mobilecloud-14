@@ -1,0 +1,8 @@
+test.py
+.settings
+target
+.classpath
+.project
+datanucleus.log
+/bin
+.DS_Store
