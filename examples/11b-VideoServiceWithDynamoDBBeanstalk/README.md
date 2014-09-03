@@ -34,9 +34,6 @@ URL:
 
 http://localhost:8080/video
 
-To add a test video, run the VideoSvcClientApiTest by right-clicking on it in 
-Eclipse->Run As->JUnit Test (make sure that you run the application first!)
-
 ## What to Pay Attention to
 
 In this version of the VideoSvc application, we are using DynamoDB to store data.
