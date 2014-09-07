@@ -59,7 +59,7 @@ Clients can upload video metadata (name, duration, etc.) once logged in,
 as well as like/unlike videos.
 
 The test that is used to grade your implementation is AutoGradingTest
-in the org.magnum.dataup package in src/test/java. **_You should use the
+in the org.magnum.mobilecloud.integration.test package in src/test/java. **_You should use the
 source code in the AutoGradingTest as the ground truth for what the expected
 behavior of your solution is_.** Your app should pass this test without 
 any errors. The test methods are annotated with @Rubric and specify
