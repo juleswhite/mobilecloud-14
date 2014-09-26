@@ -136,8 +136,7 @@ public class OAuth2SecurityConfiguration {
 		 * on a machine that is not accessible via the Internet. Even if you use
 		 * this code for testing, at the bare minimum, you should consider changing the
 		 * passwords listed below and updating the VideoSvcClientApiTest.
-		 * 
-		 * @param auth
+		 *
 		 * @throws Exception
 		 */
 		public OAuth2Config() throws Exception {
