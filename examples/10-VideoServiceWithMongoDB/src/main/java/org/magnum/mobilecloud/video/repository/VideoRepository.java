@@ -26,7 +26,7 @@ import org.springframework.data.rest.core.annotation.RepositoryRestResource;
 //    (e.g., /video/search/findByName?title=Foo)
 //
 @RepositoryRestResource(path = VideoSvcApi.VIDEO_SVC_PATH)
-public interface VideoRepository extends MongoRepository<Video, Long>{
+public interface VideoRepository extends MongoRepository<Video, String>{
 
 	// Find all videos with a matching title (e.g., Video.name)
 	public Collection<Video> findByName(
