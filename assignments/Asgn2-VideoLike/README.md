@@ -222,7 +222,7 @@ official grade.
 ## Hints
 
 - If you want to test your application without security (e.g., to add a simple request mapping
-  and try it without OAuth), you will need to uncomment the following lines in the build.gradle
+  and try it without OAuth), you will need to comment-out the following lines in the build.gradle
   file and then right-click on build.gradle->Refresh All:
 
 ```    
