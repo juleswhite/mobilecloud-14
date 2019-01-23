@@ -49,9 +49,7 @@ To run the application:
 
 ## Instructions
 
-First, clone this Git repository and import it into Eclipse as described
-in the development environment setup guide 
-[https://class.coursera.org/mobilecloud-001/wiki/Installing_Eclipse%2C_Git%2C_and_Gradle].
+First, clone this Git repository and import it into Eclipse.
 
 This assignment tests your ability to create a web application that
 allows clients to authenticate using the OAuth 2.0 Password Grant Flow.
