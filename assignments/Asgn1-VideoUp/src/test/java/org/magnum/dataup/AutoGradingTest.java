@@ -159,7 +159,7 @@ public class AutoGradingTest {
 	}
 	
 	@Rubric(
-			value="Requests for non-existant video data return a 404",
+			value="Requests for non-existent video data return a 404",
 			goal="The goal of this evaluation is to ensure that your Spring controller(s) "
 					+ "properly indicate to the client with a 404 response when the client"
 					+ " sends a request for video data for a video that does not have any"
@@ -170,12 +170,12 @@ public class AutoGradingTest {
 					+ "https://class.coursera.org/mobilecloud-001/lecture/207"
 			)
 	@Test
-	public void testGetNonExistantVideosData() throws Exception {
+	public void testGetNonExistentVideosData() throws Exception {
 		
-		long nonExistantId = getInvalidVideoId();
+		long nonExistentId = getInvalidVideoId();
 		
 		try{
-			Response r = videoSvc.getData(nonExistantId);
+			Response r = videoSvc.getData(nonExistentId);
 			assertEquals(404, r.getStatus());
 		}catch(RetrofitError e){
 			assertEquals(404, e.getResponse().getStatus());
@@ -183,7 +183,7 @@ public class AutoGradingTest {
 	}
 	
 	@Rubric(
-			value="Attempting to submit video data for a non-existant video generates a 404",
+			value="Attempting to submit video data for a non-existent video generates a 404",
 			goal="The goal of this evaluation is to ensure that your Spring controller(s) "
 					+ "produce a 404 error if a client attempts to submit video data for"
 					+ " a video that does not exist.",
@@ -194,10 +194,10 @@ public class AutoGradingTest {
 					+ "https://class.coursera.org/mobilecloud-001/lecture/65"
 			)
 	@Test
-	public void testAddNonExistantVideosData() throws Exception {
-		long nonExistantId = getInvalidVideoId();
+	public void testAddNonExistentVideosData() throws Exception {
+		long nonExistentId = getInvalidVideoId();
 		try{
-			videoSvc.setVideoData(nonExistantId, new TypedFile(video.getContentType(), testVideoData));
+			videoSvc.setVideoData(nonExistentId, new TypedFile(video.getContentType(), testVideoData));
 			fail("The client should receive a 404 error code and throw an exception if an invalid"
 					+ " video ID is provided in setVideoData()");
 		}catch(RetrofitError e){
@@ -212,11 +212,11 @@ public class AutoGradingTest {
 			ids.add(v.getId());
 		}
 		
-		long nonExistantId = Long.MIN_VALUE;
-		while(ids.contains(nonExistantId)){
-			nonExistantId++;
+		long nonExistentId = Long.MIN_VALUE;
+		while(ids.contains(nonExistentId)){
+			nonExistentId++;
 		}
-		return nonExistantId;
+		return nonExistentId;
 	}
 
 }
