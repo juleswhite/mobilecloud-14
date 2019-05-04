@@ -192,6 +192,6 @@ public interface VideoSvcApi {
 	 */
 	@Streaming
     @GET(VIDEO_DATA_PATH)
-    Response getData(@Path(ID_PARAMETER) long id);
+    void getData(@Path(ID_PARAMETER) long id);
 	
 }
